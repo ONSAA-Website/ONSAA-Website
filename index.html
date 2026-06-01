@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ONSAA</title>
+  <meta name="description" content="The ONSAA Landing Page." />
+
+  <style>
+    :root {
+      --accent: #d71920;
+      --accent-dark: #8f0f14;
+      --text: #ffffff;
+      --shadow: rgba(0, 0, 0, 0.72);
+      --edge-size: clamp(10px, 1.4vw, 18px);
+      --background-image: url("assets/background.jpeg");
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      min-height: 100svh;
+      overflow: hidden;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: #050505;
+    }
+
+    .page {
+      position: relative;
+      width: 100%;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      isolation: isolate;
+      padding: clamp(24px, 5vw, 72px);
+    }
+
+    .page::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -4;
+      background-image: var(--background-image);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transform: scale(1.01);
+    }
+
+    .page::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        radial-gradient(circle at center, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.74)),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.76));
+      pointer-events: none;
+    }
+
+    .edge-blur {
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      pointer-events: none;
+      background-image: var(--background-image);
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      filter: blur(18px);
+      transform: scale(1.06);
+      opacity: 0.45;
+      -webkit-mask-image: radial-gradient(
+        ellipse at center,
+        transparent 58%,
+        rgba(0, 0, 0, 0.45) 74%,
+        rgba(0, 0, 0, 0.85) 88%,
+        black 100%
+      );
+      mask-image: radial-gradient(
+        ellipse at center,
+        transparent 58%,
+        rgba(0, 0, 0, 0.45) 74%,
+        rgba(0, 0, 0, 0.85) 88%,
+        black 100%
+      );
+    }
+
+    .edge {
+      position: fixed;
+      inset: var(--edge-size);
+      z-index: -1;
+      border: 2px solid var(--accent);
+      box-shadow:
+        0 0 0 1px rgba(215, 25, 32, 0.35),
+        inset 0 0 42px rgba(215, 25, 32, 0.16),
+        0 0 42px rgba(215, 25, 32, 0.22);
+      pointer-events: none;
+    }
+
+    .logo-frame {
+      position: fixed;
+      top: clamp(28px, 4vw, 54px);
+      left: clamp(28px, 4vw, 54px);
+      z-index: 10;
+      width: clamp(92px, 13vw, 180px);
+      display: grid;
+      place-items: center;
+    }
+
+    .logo {
+      width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 20px var(--shadow));
+    }
+
+    .social-link {
+      position: fixed;
+      top: clamp(28px, 4vw, 54px);
+      right: clamp(28px, 4vw, 54px);
+      z-index: 10;
+      width: clamp(26px, 3vw, 34px);
+      height: clamp(26px, 3vw, 34px);
+      display: grid;
+      place-items: center;
+      color: rgba(255, 255, 255, 0.86);
+      filter: drop-shadow(0 8px 20px var(--shadow));
+      transition: color 180ms ease, transform 180ms ease, filter 180ms ease;
+    }
+
+    .social-link:hover,
+    .social-link:focus-visible {
+      color: var(--accent);
+      transform: translateY(-2px);
+      filter:
+        drop-shadow(0 8px 20px var(--shadow))
+        drop-shadow(0 0 16px rgba(215, 25, 32, 0.42));
+    }
+
+    .social-link:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.72);
+      outline-offset: 6px;
+    }
+
+    .social-link svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .content {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      min-height: 100svh;
+      text-align: center;
+      text-shadow: 0 8px 34px var(--shadow);
+      pointer-events: none;
+    }
+
+    .hero-core {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(1040px, 92vw);
+      transform: translate(-50%, -50%);
+      pointer-events: auto;
+    }
+
+    .eyebrow {
+      max-width: min(920px, 92vw);
+      margin: 0 auto 18px;
+      color: var(--accent);
+      font-size: clamp(0.72rem, 1vw, 0.95rem);
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      line-height: 1.45;
+      text-transform: uppercase;
+    }
+
+    .title-lock {
+      display: inline-block;
+      text-align: center;
+      width: fit-content;
+      max-width: 100%;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(3.5rem, 11vw, 10.5rem);
+      line-height: 0.92;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      text-transform: uppercase;
+    }
+
+    .subline {
+      width: 100%;
+      max-width: none;
+      margin: clamp(3px, 0.55vw, 8px) auto 0;
+      text-align: center;
+      font-size: clamp(1rem, 1.8vw, 1.45rem);
+      line-height: 1.45;
+      font-weight: 500;
+    }
+
+    .countdown {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(58px, 1fr));
+      gap: clamp(8px, 1vw, 12px);
+      width: min(430px, 100%);
+      margin: clamp(18px, 2.5vw, 30px) auto 0;
+    }
+
+    .countdown-card {
+      padding: clamp(8px, 1.1vw, 12px) clamp(8px, 1vw, 12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-bottom: 2px solid var(--accent);
+      background: rgba(0, 0, 0, 0.44);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+    }
+
+    .countdown-number {
+      display: block;
+      font-size: clamp(1.15rem, 2.6vw, 2.25rem);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+    }
+
+    .countdown-label {
+      display: block;
+      margin-top: 6px;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: clamp(0.58rem, 0.75vw, 0.68rem);
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .post-countdown {
+      max-width: 620px;
+      margin: clamp(14px, 2vw, 22px) auto 0;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: clamp(0.92rem, 1.25vw, 1.06rem);
+      line-height: 1.45;
+    }
+
+    .cta {
+      position: absolute;
+      top: calc(50% + clamp(220px, 24vw, 315px));
+      left: 50%;
+      width: min(620px, 92vw);
+      transform: translateX(-50%);
+      margin-top: 0;
+      pointer-events: auto;
+    }
+
+    .cta-text {
+      max-width: 620px;
+      margin: 0 auto 18px;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: clamp(0.95rem, 1.35vw, 1.12rem);
+      line-height: 1.5;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 18px;
+      border: 1px solid rgba(215, 25, 32, 0.72);
+      border-radius: 4px;
+      color: rgba(255, 255, 255, 0.92);
+      background:
+        linear-gradient(135deg, rgba(215, 25, 32, 0.18), rgba(0, 0, 0, 0.52)),
+        rgba(0, 0, 0, 0.44);
+      backdrop-filter: blur(8px);
+      box-shadow:
+        0 14px 34px rgba(0, 0, 0, 0.3),
+        inset 0 -2px 0 rgba(215, 25, 32, 0.72);
+      font-size: 0.82rem;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-decoration: none;
+      text-transform: uppercase;
+      transition:
+        color 180ms ease,
+        background 180ms ease,
+        border-color 180ms ease,
+        transform 180ms ease,
+        box-shadow 180ms ease;
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      color: #ffffff;
+      background:
+        linear-gradient(135deg, rgba(143, 15, 20, 0.58), rgba(68, 6, 9, 0.72)),
+        var(--accent-dark);
+      border-color: rgba(215, 25, 32, 0.76);
+      transform: translateY(-1px);
+      box-shadow:
+        0 16px 36px rgba(0, 0, 0, 0.36),
+        inset 0 -2px 0 var(--accent),
+        0 0 18px rgba(143, 15, 20, 0.24);
+    }
+
+    .button:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.72);
+      outline-offset: 4px;
+    }
+
+    @media (max-height: 760px) and (min-width: 701px) {
+      .eyebrow {
+        margin-bottom: 12px;
+        font-size: 0.72rem;
+      }
+
+      h1 {
+        font-size: clamp(3.2rem, 10vw, 8.8rem);
+      }
+
+      .countdown {
+        margin-top: 16px;
+      }
+
+      .post-countdown {
+        margin-top: 12px;
+      }
+
+      .cta {
+        top: calc(50% + clamp(180px, 22vw, 260px));
+      }
+    }
+
+    @media (max-width: 700px) {
+      body {
+        min-height: 100dvh;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+
+      .page {
+        display: block;
+        min-height: 100dvh;
+        padding: clamp(90px, 18svh, 128px) clamp(18px, 6vw, 28px) clamp(34px, 8svh, 54px);
+      }
+
+      .content {
+        position: relative;
+        inset: auto;
+        min-height: calc(100dvh - clamp(124px, 26svh, 182px));
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(22px, 5svh, 36px);
+        pointer-events: auto;
+      }
+
+      .hero-core,
+      .cta {
+        position: relative;
+        top: auto;
+        left: auto;
+        width: min(620px, 100%);
+        transform: none;
+      }
+
+      .cta {
+        margin: 0 auto;
+      }
+
+      .logo-frame {
+        top: clamp(22px, 6vw, 32px);
+        left: clamp(22px, 6vw, 32px);
+        width: clamp(72px, 24vw, 96px);
+      }
+
+      .social-link {
+        top: clamp(24px, 6vw, 34px);
+        right: clamp(24px, 6vw, 34px);
+        width: 28px;
+        height: 28px;
+      }
+
+      .eyebrow {
+        max-width: 36rem;
+        margin-bottom: 12px;
+        font-size: clamp(0.62rem, 2.4vw, 0.78rem);
+        letter-spacing: 0.12em;
+        line-height: 1.45;
+      }
+
+      h1 {
+        font-size: clamp(4.1rem, 24vw, 7.4rem);
+      }
+
+      .subline {
+        font-size: clamp(0.92rem, 4vw, 1.18rem);
+        line-height: 1.35;
+      }
+
+      .countdown {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        width: min(100%, 380px);
+        gap: 6px;
+        margin-top: 18px;
+      }
+
+      .countdown-card {
+        padding: 9px 6px;
+      }
+
+      .countdown-number {
+        font-size: clamp(1.25rem, 7vw, 2rem);
+      }
+
+      .countdown-label {
+        margin-top: 5px;
+        font-size: clamp(0.48rem, 1.7vw, 0.58rem);
+        letter-spacing: 0.1em;
+      }
+
+      .post-countdown {
+        max-width: 26rem;
+        margin-top: 14px;
+        font-size: 0.92rem;
+      }
+
+      .cta-text {
+        max-width: 32rem;
+        margin-bottom: 16px;
+        font-size: 0.95rem;
+      }
+
+      .button {
+        max-width: 100%;
+        min-height: 44px;
+        padding: 0 15px;
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        white-space: normal;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .page {
+        padding-inline: 16px;
+      }
+
+      .countdown {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: min(260px, 100%);
+        gap: 8px;
+      }
+
+      .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="edge-blur" aria-hidden="true"></div>
+    <div class="edge" aria-hidden="true"></div>
+
+    <div class="logo-frame" aria-label="ONSAA logo">
+      <img class="logo" src="assets/logo.png" alt="ONSAA logo" />
+    </div>
+
+    <a class="social-link" href="https://www.instagram.com/ontariostudentstrike/" target="_blank" rel="noopener noreferrer" aria-label="Follow ONSAA on Instagram">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2Zm0 1.8A3.96 3.96 0 0 0 3.8 7.75v8.5a3.96 3.96 0 0 0 3.95 3.95h8.5a3.96 3.96 0 0 0 3.95-3.95v-8.5a3.96 3.96 0 0 0-3.95-3.95h-8.5ZM12 7.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8Zm0 1.8a3.1 3.1 0 1 0 0 6.2 3.1 3.1 0 0 0 0-6.2Zm5.1-2.95a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Z" />
+      </svg>
+    </a>
+
+    <section class="content" aria-label="Landing page introduction">
+      <div class="hero-core">
+        <p class="eyebrow">We do not ask for permission to educate ourselves. We do not ask for permission to secure our future.</p>
+        <div class="title-lock">
+          <h1>ONSAA</h1>
+          <p class="subline">The Ontario Students Against Austerity</p>
+        </div>
+
+        <div class="countdown" aria-label="Countdown timer">
+          <div class="countdown-card">
+            <span class="countdown-number" id="days">00</span>
+            <span class="countdown-label">Days</span>
+          </div>
+          <div class="countdown-card">
+            <span class="countdown-number" id="hours">00</span>
+            <span class="countdown-label">Hours</span>
+          </div>
+          <div class="countdown-card">
+            <span class="countdown-number" id="minutes">00</span>
+            <span class="countdown-label">Minutes</span>
+          </div>
+          <div class="countdown-card">
+            <span class="countdown-number" id="seconds">00</span>
+            <span class="countdown-label">Seconds</span>
+          </div>
+        </div>
+
+        <p class="post-countdown">Mark your calendars, the strike is on.</p>
+      </div>
+
+      <div class="cta">
+        <p class="cta-text">If you're ready to contribute to the best of your abilities, you'll find a movement, a community, a cause.</p>
+        <a class="button" href="https://forms.gle/aGaaw8SKxN1B97o96" target="_blank" rel="noopener noreferrer">
+          Let's carve that path. Together.
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const targetDateTime = "2026-11-01T08:30:00-05:00";
+    const volunteerSignupUrl = "https://forms.gle/aGaaw8SKxN1B97o96";
+    const instagramUrl = "https://www.instagram.com/ontariostudentstrike/";
+
+    const countdownElements = {
+      days: document.getElementById("days"),
+      hours: document.getElementById("hours"),
+      minutes: document.getElementById("minutes"),
+      seconds: document.getElementById("seconds"),
+    };
+
+    document.querySelector(".button").href = volunteerSignupUrl;
+    document.querySelector(".social-link").href = instagramUrl;
+
+    function formatNumber(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function updateCountdown() {
+      const targetTime = new Date(targetDateTime).getTime();
+      const currentTime = Date.now();
+      const remaining = Math.max(0, targetTime - currentTime);
+
+      const totalSeconds = Math.floor(remaining / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      countdownElements.days.textContent = formatNumber(days);
+      countdownElements.hours.textContent = formatNumber(hours);
+      countdownElements.minutes.textContent = formatNumber(minutes);
+      countdownElements.seconds.textContent = formatNumber(seconds);
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  </script>
+</body>
+</html>
