@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>News and updates | ONSAA</title>
+  <meta name="description" content="Latest news and campaign updates from ONSAA." />
+  <link rel="stylesheet" href="../styles/main.css" />
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      background: #050505;
+      color: #fff;
+    }
+
+    :root {
+      --frame-gap: calc(var(--edge-size) + 18px);
+      --panel-radius: 24px;
+      --content-max: 1040px;
+    }
+
+    .page.page-inner {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .page-shell {
+      position: fixed;
+      top: var(--frame-gap);
+      right: var(--frame-gap);
+      bottom: var(--frame-gap);
+      left: calc(var(--nav-width) + var(--frame-gap) + 18px);
+      z-index: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 84px 18px 120px;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+    }
+
+    .inner-shell {
+      width: min(var(--content-max), 100%);
+      margin: 0 auto;
+    }
+
+    .panel,
+    .news-item {
+      border: 1px solid rgba(215, 25, 32, 0.32);
+      border-radius: var(--panel-radius);
+      background: linear-gradient(180deg, rgba(215, 25, 32, 0.06), rgba(0, 0, 0, 0.24)), rgba(10, 10, 10, 0.48);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 18px 46px rgba(0, 0, 0, 0.34);
+    }
+
+    .panel {
+      padding: 28px;
+      margin-bottom: 18px;
+    }
+
+    .panel h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 0.95;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.05em;
+      color: #fff;
+    }
+
+    .panel p,
+    .news-item p {
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.6;
+    }
+
+    .news-list {
+      display: grid;
+      gap: 18px;
+    }
+
+    .news-item {
+      padding: 24px;
+    }
+
+    .news-meta {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .news-item h2 {
+      margin: 0 0 10px;
+      color: #fff;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    @media (max-width: 900px) {
+      html,
+      body {
+        overflow: auto;
+      }
+
+      .page.page-inner {
+        position: relative;
+        inset: auto;
+        min-height: 100dvh;
+      }
+
+      .page-shell {
+        position: relative;
+        top: auto;
+        right: auto;
+        bottom: auto;
+        left: auto;
+        overflow: visible;
+        padding: max(96px, var(--frame-gap)) max(16px, var(--frame-gap)) max(96px, var(--frame-gap));
+      }
+
+      .inner-shell {
+        width: 100%;
+      }
+
+      .panel,
+      .news-item {
+        border-radius: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page page-inner">
+    <div class="edge-blur" aria-hidden="true"></div>
+    <div class="edge" aria-hidden="true"></div>
+
+    <nav class="side-tabs" aria-label="Primary">
+      <a href="../index.html">Home</a>
+      <a href="../about-us/index.html">About us</a>
+      <a href="../articles/index.html">Articles</a>
+      <a href="../resource-guides/index.html">Resource guide</a>
+      <a href="../news/index.html" aria-current="page">News and updates</a>
+      <a href="../volunteer/index.html">Volunteer with us</a>
+    </nav>
+
+    <a class="logo-frame" href="../index.html" aria-label="Go to home page">
+      <img class="logo" src="../assets/logo.png" alt="ONSAA logo" />
+    </a>
+
+    <div class="social-links" aria-label="Social and contact links">
+      <a
+        class="social-link"
+        href="https://www.instagram.com/ontariostudentstrike/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Follow ONSAA on Instagram"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2Zm0 1.8A3.96 3.96 0 0 0 3.8 7.75v8.5a3.96 3.96 0 0 0 3.95 3.95h8.5a3.96 3.96 0 0 0 3.95-3.95v-8.5a3.96 3.96 0 0 0-3.95-3.95h-8.5ZM12 7.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8Zm0 1.8a3.1 3.1 0 1 0 0 6.2 3.1 3.1 0 0 0 0-6.2Zm5.1-2.95a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Z" />
+        </svg>
+      </a>
+
+      <a
+        class="social-link"
+        href="mailto:on.students.against.austerity@gmail.com"
+        aria-label="Email ONSAA"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M3 6.75A1.75 1.75 0 0 1 4.75 5h14.5A1.75 1.75 0 0 1 21 6.75v10.5A1.75 1.75 0 0 1 19.25 19H4.75A1.75 1.75 0 0 1 3 17.25V6.75Zm1.8.42v.19l7.2 5.4 7.2-5.4v-.19a.35.35 0 0 0-.35-.35H5.15a.35.35 0 0 0-.35.35Zm14.4 2.44-6.66 5a.9.9 0 0 1-1.08 0l-6.66-5v7.64c0 .2.16.35.35.35h13.7c.19 0 .35-.15.35-.35V9.61Z" />
+        </svg>
+      </a>
+    </div>
+
+    <section class="page-shell">
+      <div class="inner-shell">
+        <section class="panel">
+          <h1>News and updates</h1>
+          <p></p>
+        </section>
+
+        <section class="news-list">
+          <article class="news-item">
+            <p class="news-meta"> </p>
+            <h2> </h2>
+            <p> </p>
+          </article>
+        </section>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
