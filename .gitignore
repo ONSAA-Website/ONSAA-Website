@@ -7,3 +7,11 @@ _site/
 vendor/
 # macOS system files
 .DS_Store
+# node.js & npm
+node_modules/
+package-lock.json
+.yarnrc.yml
+.yarn/
+# stripe
+server/.env
+server/.env.*
