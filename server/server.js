@@ -30,7 +30,7 @@ app.post("/create-payment-intent", async (req, res) => {
       currency: "cad",
       automatic_payment_methods: {
         enabled: true
-      }, 
+      },
       // exclude all pay-later methods
       excluded_payment_method_types: [
         "affirm",
@@ -56,4 +56,8 @@ app.post("/create-payment-intent", async (req, res) => {
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`ONSAA donations server listening on port ${port}`);
+});
+
+app.get("/status", (_req, res) => {
+  res.sendStatus(200);
 });
