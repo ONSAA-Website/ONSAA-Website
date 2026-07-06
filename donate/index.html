@@ -1,157 +1,314 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <link rel="stylesheet" href="./styles/main.css" />
+  <link rel="stylesheet" href="../styles/main.css" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Donate | ONSAA</title>
   <meta name="description" content="Support ONSAA with a donation." />
   <script src="https://js.stripe.com/v3/"></script>
   <style>
-    .donate-page {
-      min-height: 100svh;
-      display: grid;
-      place-items: center;
-      padding: 120px 20px;
+
+    :root {
+      --frame-gap: calc(var(--edge-size) + 18px);
+      --panel-radius: 24px;
+      --content-max: 980px;
+    }
+
+    .page.page-inner {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .page-shell {
+      position: fixed;
+      top: var(--frame-gap);
+      right: var(--frame-gap);
+      bottom: var(--frame-gap);
+      left: calc(var(--nav-width) + var(--frame-gap) + 18px);
+      z-index: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 84px 18px 120px;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+    }
+
+    .inner-shell {
+      width: min(var(--content-max), 100%);
+      margin: 0 auto;
+    }
+    .donate-content {
+      width: min(760px, 100%);
+      margin-inline: auto;
+    }
+
+    .donate-panel {
+      position: relative;
+      padding: 28px;
+      border: 1px solid rgba(215, 25, 32, 0.28);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(215, 25, 32, 0.05), rgba(0, 0, 0, 0.28)), rgba(8, 8, 8, 0.5);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .donate-panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+
+    .donate-kicker,
+    .element-label,
+    .status-text,
+    .donate-note {
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    .donate-shell {
-      width: min(760px, 100%);
-      padding: 28px;
-      border: 1px solid rgba(215, 25, 32, 0.32);
-      border-radius: 24px;
-      background: linear-gradient(180deg, rgba(215, 25, 32, 0.06), rgba(0, 0, 0, 0.24)), rgba(10, 10, 10, 0.48);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 18px 46px rgba(0, 0, 0, 0.34);
-    }
-
-    .donate-shell h1 {
-      margin: 0 0 10px;
-      font-size: clamp(2.1rem, 5vw, 3.5rem);
-      line-height: 0.95;
-      font-weight: 900;
+    .donate-kicker {
+      margin: 0 0 12px;
+      color: rgba(255,255,255,0.72);
+      font-size: 0.82rem;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
-      letter-spacing: -0.04em;
-      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-weight: 800;
     }
 
-    .donate-shell p {
-      margin: 0 0 18px;
-      color: rgba(255, 255, 255, 0.9);
-      line-height: 1.6;
+    .donate-title {
+      margin: 0;
+    }
+
+    .donate-title h1 {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      font-size: clamp(3rem, 8vw, 6.2rem);
+      line-height: 0.92;
+      letter-spacing: -0.08em;
+      text-transform: uppercase;
+      font-weight: 900;
+    }
+
+    .donate-subline {
+      margin: 12px 0 0;
+      color: rgba(255,255,255,0.84);
+      font-size: 1rem;
+      line-height: 1.7;
+      max-width: 52ch;
     }
 
     .amount-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      margin: 20px 0 14px;
+      gap: 10px;
+      margin: 22px 0 14px;
     }
 
     .amount-button,
     .submit-button {
-      min-height: 48px;
-      padding: 12px 14px;
-      border: 1px solid rgba(215, 25, 32, 0.72);
-      border-radius: 8px;
-      color: rgba(255, 255, 255, 0.92);
+      min-height: 50px;
+      border: 1px solid rgba(215, 25, 32, 0.58);
+      border-radius: 999px;
       background:
-        linear-gradient(135deg, rgba(215, 25, 32, 0.18), rgba(0, 0, 0, 0.52)),
-        rgba(0, 0, 0, 0.44);
-      font-size: 0.92rem;
-      font-weight: 800;
-      letter-spacing: 0.06em;
+        linear-gradient(135deg, rgba(215, 25, 32, 0.16), rgba(0, 0, 0, 0.52)),
+        rgba(0, 0, 0, 0.36);
+      color: rgba(255,255,255,0.94);
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 900;
       text-transform: uppercase;
+      letter-spacing: 0.08em;
       cursor: pointer;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+    }
+
+    .amount-button:hover,
+    .submit-button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(215, 25, 32, 0.9);
     }
 
     .amount-button.is-active {
-      background: linear-gradient(135deg, rgba(143, 15, 20, 0.58), rgba(68, 6, 9, 0.72)), #8f0f14;
+      background: linear-gradient(135deg, rgba(143, 15, 20, 0.7), rgba(68, 6, 9, 0.82)), #8f0f14;
+      border-color: rgba(255,255,255,0.16);
     }
 
     .custom-row {
-      margin-bottom: 18px;
+      margin-bottom: 14px;
     }
 
     .custom-row input {
       width: 100%;
-      min-height: 48px;
-      padding: 0 14px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 8px;
-      background: rgba(0, 0, 0, 0.42);
+      min-height: 52px;
+      padding: 0 16px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 999px;
+      background: rgba(0,0,0,0.34);
       color: #fff;
       font: inherit;
+      font-size: 0.98rem;
+    }
+
+    .custom-row input::placeholder {
+      color: rgba(255,255,255,0.52);
     }
 
     .element-label {
       margin: 18px 0 10px;
-      font-size: 0.82rem;
-      font-weight: 800;
-      letter-spacing: 0.14em;
+      color: rgba(255,255,255,0.72);
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.78);
     }
 
     #express-checkout-element,
     #payment-element {
-      border-radius: 12px;
+      border-radius: 18px;
+      overflow: hidden;
     }
 
     #payment-element {
-      margin-top: 8px;
-      margin-bottom: 18px;
-    }
-
-    .status-text {
-      min-height: 24px;
-      margin: 10px 0 0;
-      color: rgba(255, 255, 255, 0.8);
-      font-size: 0.95rem;
+      margin-bottom: 16px;
     }
 
     .submit-button {
       width: 100%;
+      margin-top: 4px;
     }
 
     .submit-button[disabled] {
-      opacity: 0.6;
+      opacity: 0.65;
       cursor: wait;
+      transform: none;
     }
 
-    @media (max-width: 760px) {
+    .status-text {
+      min-height: 24px;
+      margin: 12px 0 0;
+      color: rgba(255,255,255,0.78);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .donate-note {
+      margin: 14px 0 0;
+      color: rgba(255,255,255,0.56);
+      font-size: 0.84rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 720px) {
       .amount-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .donate-panel {
+        padding: 22px 18px;
+      }
+
+      .donate-title h1 {
+        font-size: clamp(2.6rem, 16vw, 4.5rem);
+      }
+
+      .content.content--donate {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 140px 24px 72px;
+        box-sizing: border-box;
+      }
+
+        .donate-content {
+        width: min(760px, 100%);
+        margin-inline: auto;
       }
     }
   </style>
 </head>
 <body>
-  <main class="donate-page">
-    <section class="donate-shell">
-      <h1>Donate</h1>
-      <p>Your contribution helps fund organizing, outreach, and campaign materials.</p>
+  <main class="page page-inner">
+    <div class="edge-blur" aria-hidden="true"></div>
+    <div class="edge" aria-hidden="true"></div>
 
-      <div class="amount-grid">
-        <button class="amount-button" data-amount="500">$5</button>
-        <button class="amount-button" data-amount="1000">$10</button>
-        <button class="amount-button" data-amount="2500">$25</button>
-        <button class="amount-button is-active" data-amount="5000">$50</button>
+    <nav class="side-tabs" aria-label="Primary">
+      <a href="../index.html" aria-current="page">Home</a>
+      <a href="../about-us/index.html">About us</a>
+      <a href="../articles/index.html">Articles</a>
+      <a href="../resource-guides/index.html">Resource guides</a>
+      <a href="../news/index.html">News and updates</a>
+      <a href="../volunteer/index.html">Volunteer with us</a>
+      <a href="../donate/index.html">Donate</a>
+    </nav>
+
+
+    <a class="logo-frame" href="../index.html" aria-label="Go to home page">
+      <img class="logo" src="../assets/logo.png" alt="ONSAA logo" />
+    </a>
+
+    <div class="social-links" aria-label="Social and contact links">
+      <a
+        class="social-link"
+        href="https://www.instagram.com/ontariostudentstrike/"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Follow ONSAA on Instagram"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2Zm0 1.8A3.96 3.96 0 0 0 3.8 7.75v8.5a3.96 3.96 0 0 0 3.95 3.95h8.5a3.96 3.96 0 0 0 3.95-3.95v-8.5a3.96 3.96 0 0 0-3.95-3.95h-8.5ZM12 7.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8Zm0 1.8a3.1 3.1 0 1 0 0 6.2 3.1 3.1 0 0 0 0-6.2Zm5.1-2.95a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Z" />
+        </svg>
+      </a>
+
+      <a
+        class="social-link"
+        href="mailto:on.students.against.austerity@gmail.com"
+        aria-label="Email ONSAA"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M3 6.75A1.75 1.75 0 0 1 4.75 5h14.5A1.75 1.75 0 0 1 21 6.75v10.5A1.75 1.75 0 0 1 19.25 19H4.75A1.75 1.75 0 0 1 3 17.25V6.75Zm1.8.42v.19l7.2 5.4 7.2-5.4v-.19a.35.35 0 0 0-.35-.35H5.15a.35.35 0 0 0-.35.35Zm14.4 2.44-6.66 5a.9.9 0 0 1-1.08 0l-6.66-5v7.64c0 .2.16.35.35.35h13.7c.19 0 .35-.15.35-.35V9.61Z" />
+        </svg>
+      </a>
+    </div>
+
+    <section class="page-shell">
+      <div class="inner-shell">
+        <div class="donate-panel">
+          <p class="donate-kicker">Support the movement</p>
+
+          <div class="donate-title">
+            <h1>Donate</h1>
+            <p class="donate-subline">
+              Your contribution helps fund student organizing, campaign materials, and outreach.
+            </p>
+          </div>
+
+          <div class="amount-grid" aria-label="Suggested donation amounts">
+            <button class="amount-button" data-amount="1000">CA$10</button>
+            <button class="amount-button" data-amount="2500">CA$25</button>
+            <button class="amount-button is-active" data-amount="5000">CA$50</button>
+            <button class="amount-button" data-amount="10000">CA$100</button>
+          </div>
+
+          <div class="custom-row">
+            <input id="customAmount" type="number" min="1" step="1" placeholder="Custom amount in CAD, e.g. 35" />
+          </div>
+
+          <div class="element-label">Quick pay</div>
+          <div id="express-checkout-element"></div>
+
+          <div class="element-label">Card details</div>
+          <div id="payment-element"></div>
+
+          <button id="submit" class="submit-button">Complete donation</button>
+          <p id="statusText" class="status-text" aria-live="polite"></p>
+          <p class="donate-note">Wallet options appear based on your device, browser, Stripe configuration, and domain setup.</p>
+        </div>
       </div>
-
-      <div class="custom-row">
-        <input id="customAmount" type="number" min="1" step="1" placeholder="Custom amount in CAD" />
-      </div>
-
-      <div class="element-label">Quick pay</div>
-      <div id="express-checkout-element"></div>
-
-      <div class="element-label">Card details</div>
-      <div id="payment-element"></div>
-
-      <button id="submit" class="submit-button">Donate now</button>
-      <p id="statusText" class="status-text"></p>
     </section>
   </main>
 
@@ -176,9 +333,7 @@
 
     function getSelectedAmount() {
       const customValue = Number(customAmountInput.value);
-      if (customValue > 0) {
-        return Math.round(customValue * 100);
-      }
+      if (customValue > 0) return Math.round(customValue * 100);
       return selectedAmount;
     }
 
@@ -202,24 +357,17 @@
     async function createIntent(amount) {
       const response = await fetch("http://localhost:3000/create-payment-intent", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount })
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to create payment intent.");
-      }
-
+      if (!response.ok) throw new Error(data.error || "Unable to initialize payment.");
       return data.clientSecret;
     }
 
     async function setupElements(amount) {
-      statusText.textContent = "Loading secure payment form...";
-
+      statusText.textContent = "Loading secure payment form…";
       clientSecret = await createIntent(amount);
 
       if (paymentElement) paymentElement.destroy();
@@ -229,20 +377,26 @@
         theme: "night",
         variables: {
           colorPrimary: "#d71920",
-          colorBackground: "#121212",
+          colorBackground: "#111111",
           colorText: "#ffffff",
-          colorDanger: "#ff5a5f",
-          fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif",
-          borderRadius: "10px"
+          colorDanger: "#ff6b6b",
+          colorTextSecondary: "rgba(255,255,255,0.7)",
+          colorBorder: "rgba(255,255,255,0.12)",
+          borderRadius: "18px",
+          fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
         }
       };
 
-      elements = stripe.elements({
-        clientSecret,
-        appearance
-      });
+      elements = stripe.elements({ clientSecret, appearance });
 
-      expressCheckoutElement = elements.create("expressCheckout");
+      expressCheckoutElement = elements.create("expressCheckout", {
+        paymentMethods: {
+          applePay: "auto",
+          googlePay: "auto",
+          paypal: "auto",
+          link: "auto"
+        }
+      });
       expressCheckoutElement.mount("#express-checkout-element");
 
       paymentElement = elements.create("payment", {
@@ -255,11 +409,10 @@
 
     submitButton.addEventListener("click", async (event) => {
       event.preventDefault();
-
       if (!elements) return;
 
       submitButton.disabled = true;
-      statusText.textContent = "Processing donation...";
+      statusText.textContent = "Processing donation…";
 
       const { error: submitError } = await elements.submit();
       if (submitError) {
@@ -272,13 +425,17 @@
         elements,
         confirmParams: {
           return_url: "http://127.0.0.1:5500/donate-success.html"
-        }
+        },
+        redirect: "if_required"
       });
 
       if (error) {
         statusText.textContent = error.message || "Something went wrong.";
         submitButton.disabled = false;
+        return;
       }
+
+      statusText.textContent = "Donation completed.";
     });
 
     setupElements(selectedAmount).catch((error) => {

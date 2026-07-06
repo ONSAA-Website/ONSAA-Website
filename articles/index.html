@@ -49,6 +49,24 @@
     .article-card h2 { margin: 0 0 10px; color: #fff; font-size: 1.2rem; text-transform: uppercase; letter-spacing: .04em; }
     .read-more { display: inline-flex; margin-top: 12px; color: #fff; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; }
 
+    .a-header {
+        max-width: 52rem;
+        margin: 0 auto;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: clamp(1rem, 1.6vw, 1.1rem);
+        line-height: 1.55;
+      }
+
+    .a-header h1 {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 5vw, 4rem);
+        line-height: 0.95;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: -0.05em;
+        color: #fff;
+    }
+
     @media (max-width: 900px) {
       html, body { overflow: auto; }
       .page.page-inner { position: relative; inset: auto; min-height: 100dvh; }
@@ -64,13 +82,15 @@
     <div class="edge" aria-hidden="true"></div>
 
     <nav class="side-tabs" aria-label="Primary">
-      <a href="../index.html">Home</a>
+      <a href="../index.html" aria-current="page">Home</a>
       <a href="../about-us/index.html">About us</a>
-      <a href="../articles/index.html" aria-current="page">Articles</a>
-      <a href="../resource-guides/index.html">Resource guide</a>
+      <a href="../articles/index.html">Articles</a>
+      <a href="../resource-guides/index.html">Resource guides</a>
       <a href="../news/index.html">News and updates</a>
       <a href="../volunteer/index.html">Volunteer with us</a>
+      <a href="../donate/index.html">Donate</a>
     </nav>
+
 
     <a class="logo-frame" href="../index.html" aria-label="Go to home page">
       <img class="logo" src="../assets/logo.png" alt="ONSAA logo" />
@@ -102,7 +122,7 @@
 
     <section class="page-shell">
       <div class="inner-shell">
-        <section class="panel">
+        <section class="a-header">
           <h1>Articles</h1>
         </section>
 
