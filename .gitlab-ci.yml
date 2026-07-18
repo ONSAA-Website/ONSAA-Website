@@ -1,0 +1,71 @@
+# Deploys the site to GitLab Pages.
+#
+# FRAMEWORK selects the build strategy. "static" (default) copies the raw
+# HTML/CSS as-is. Add cases to the build script as the site adopts a
+# framework (vite, astro, jekyll, ...).
+
+variables:
+  FRAMEWORK: "static"
+
+stages:
+  - build
+  - deploy
+  - mirror
+
+build-site:
+  stage: build
+  image: node:22-alpine
+  script:
+    - |
+      case "$FRAMEWORK" in
+        static)
+          mkdir -p public
+          rsync_excludes="--exclude public --exclude server --exclude .git --exclude .github --exclude .gitlab-ci.yml"
+          apk add --no-cache rsync
+          rsync -a $rsync_excludes ./ public/
+          ;;
+        vite)
+          npm ci
+          npm run build
+          mv dist public
+          ;;
+        jekyll)
+          apk add --no-cache ruby ruby-dev build-base
+          gem install bundler jekyll
+          jekyll build -d public
+          ;;
+        *)
+          echo "Unknown FRAMEWORK: $FRAMEWORK" >&2
+          exit 1
+          ;;
+      esac
+  artifacts:
+    paths:
+      - public
+    expire_in: 1 week
+
+pages:
+  stage: deploy
+  script:
+    - echo "Deploying to GitLab Pages"
+  artifacts:
+    paths:
+      - public
+  rules:
+    # GitLab Pages is the internal preview of the draft branch only; main is
+    # published via the mirror-to-github job below.
+    - if: '$CI_COMMIT_BRANCH == "draft"'
+
+# Mirrors main to GitHub, where a GitHub Actions workflow deploys to GitHub
+# Pages on the public domain. Inactive until these CI/CD variables are set
+# (Settings > CI/CD > Variables, both masked):
+#   GITHUB_REPO  - e.g. "onsaa/onsaa-site" (owner/repo on github.com)
+#   GITHUB_TOKEN - fine-grained PAT with Contents: read/write on that repo
+mirror-to-github:
+  stage: mirror
+  image: alpine:latest
+  script:
+    - apk add --no-cache git
+    - git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git" "HEAD:refs/heads/main"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $GITHUB_REPO && $GITHUB_TOKEN'
