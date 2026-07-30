@@ -1,0 +1,51 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout
+  title="Resource guide | ONSAA"
+  description="Resources, reading, and organizing tools from ONSAA."
+  current="/resource-guides/"
+  contentMax="1080px"
+>
+  <section class="page-shell">
+    <div class="inner-shell">
+      <section class="page-header">
+        <h1>Resource guides</h1>
+      </section>
+
+      <div class="resource-grid">
+        <article class="resource-card"></article>
+        <article class="resource-card"></article>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<style is:global>
+  .resource-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .resource-card h2 {
+    margin: 0 0 10px;
+    color: #fff;
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .resource-card ul {
+    margin: 12px 0 0;
+    padding-left: 18px;
+  }
+
+  @media (max-width: 900px) {
+    .resource-grid {
+      width: 100%;
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

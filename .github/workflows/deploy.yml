@@ -1,0 +1,62 @@
+# Public deploy: builds the Astro site and publishes to GitHub Pages on main.
+# Replaces the old jekyll-gh-pages.yml, which ran Jekyll against the raw HTML.
+#
+# If Pages serves this as a *project* site (username.github.io/onsaa-site),
+# set ASTRO_BASE to "/onsaa-site/" below. For a custom domain at the root,
+# leave it unset.
+name: Deploy site to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          # ASTRO_BASE: "/onsaa-site/"   # uncomment for a project-site deploy
+          ASTRO_SITE: "https://onsaa.org"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

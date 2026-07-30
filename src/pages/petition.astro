@@ -1,0 +1,25 @@
+---
+import Layout from "../layouts/Layout.astro";
+import EmbeddedForm from "../components/EmbeddedForm.astro";
+
+// NOTE: this is currently the *volunteer* form. The old petition/index.html was
+// a byte-for-byte copy of volunteer/index.html — same <title>, same heading,
+// same embed — so the petition page has never had its own form. Swap this URL
+// for the real petition form; the heading and blurb below are placeholders too.
+const petitionFormUrl =
+  "https://docs.google.com/forms/d/e/1FAIpQLSdadMqgjt0S-5plXOmRvntDIFIfrBSf8wmhxeTIHUf-PlnYmg/viewform?embedded=true";
+---
+
+<Layout
+  title="Sign the petition | ONSAA"
+  description="Sign the ONSAA petition and support the strike motion."
+  current="/petition/"
+  variant="form"
+>
+  <EmbeddedForm
+    heading="Support the Strike Motion"
+    blurb="Fill out the form below to show your support."
+    src={petitionFormUrl}
+    formTitle="ONSAA petition form"
+  />
+</Layout>

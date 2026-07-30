@@ -231,7 +231,13 @@ body {
   max-width: 100%;
 }
 
-h1 {
+/*
+ * Scoped to the hero deliberately. This was a bare `h1` rule that every inner
+ * page had to override, and those overrides only won by virtue of the page's
+ * <style> block appearing after main.css in the <head>. Scoping it removes the
+ * source-order dependency, which component-based CSS bundling does not promise.
+ */
+.hero-core h1 {
   margin: 0;
   font-size: clamp(3.5rem, 11vw, 10.5rem);
   line-height: 0.92;
@@ -438,7 +444,7 @@ h1 {
     font-size: 0.72rem;
   }
 
-  h1 {
+  .hero-core h1 {
     font-size: clamp(3.2rem, 10vw, 8.8rem);
   }
 
@@ -540,7 +546,7 @@ h1 {
     line-height: 1.45;
   }
 
-  h1 {
+  .hero-core h1 {
     font-size: clamp(4.1rem, 24vw, 7.4rem);
   }
 

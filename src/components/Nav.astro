@@ -1,0 +1,37 @@
+---
+import { url } from "../lib/url";
+
+interface Props {
+  /** Path of the current page, e.g. "/about-us/". Drives aria-current. */
+  current?: string;
+}
+
+const { current } = Astro.props;
+
+// Single source of truth for the primary nav. Previously this list was copied
+// into all nine pages, which is how /index.html ended up linking to
+// "../petition/index.html" from the site root.
+const links = [
+  { href: "/", label: "Home" },
+  { href: "/about-us/", label: "About us" },
+  { href: "/articles/", label: "Articles" },
+  { href: "/resource-guides/", label: "Resource guides" },
+  { href: "/news/", label: "News and updates" },
+  { href: "/petition/", label: "Sign Petition" },
+  { href: "/volunteer/", label: "Volunteer with us" },
+  { href: "/donate/", label: "Donate" },
+];
+---
+
+<nav class="side-tabs" aria-label="Primary">
+  {
+    links.map((link) => (
+      <a
+        href={url(link.href)}
+        aria-current={link.href === current ? "page" : undefined}
+      >
+        {link.label}
+      </a>
+    ))
+  }
+</nav>

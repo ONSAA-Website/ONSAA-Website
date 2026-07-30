@@ -1,0 +1,67 @@
+---
+import Nav from "../components/Nav.astro";
+import SocialLinks from "../components/SocialLinks.astro";
+import { url } from "../lib/url";
+import logo from "../assets/logo.png";
+import "../styles/main.css";
+import "../styles/shell.css";
+
+interface Props {
+  title: string;
+  description: string;
+  /** Path of this page, for nav highlighting. e.g. "/about-us/" */
+  current: string;
+  /**
+   * hero  - full-bleed centred landing page (scrolls the body)
+   * inner - fixed frame with a scrolling content shell
+   * form  - like inner, but sized for an embedded form
+   */
+  variant?: "hero" | "inner" | "form";
+  /** Max width of .inner-shell. Was a per-page :root override. */
+  contentMax?: string;
+}
+
+const {
+  title,
+  description,
+  current,
+  variant = "inner",
+  contentMax = "980px",
+} = Astro.props;
+
+const pageClass =
+  variant === "hero" ? "page" : variant === "form" ? "page page-form" : "page page-inner";
+
+// The hero scrolls normally; inner/form pages lock the viewport and scroll
+// inside .page-shell. The old pages did this with `html, body { overflow:
+// hidden }` in each page's <style> block.
+const frameClass =
+  variant === "hero" ? "" : variant === "form" ? "page-form-body" : "page-inner-body";
+---
+
+<!doctype html>
+<html lang="en" class={frameClass}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <slot name="head" />
+  </head>
+  <body class={frameClass} style={`--content-max: ${contentMax};`}>
+    <main class={pageClass}>
+      <div class="edge-blur" aria-hidden="true"></div>
+      <div class="edge" aria-hidden="true"></div>
+
+      <Nav current={current} />
+
+      <a class="logo-frame" href={url("/")} aria-label="Go to home page">
+        <img class="logo" src={logo.src} alt="ONSAA logo" />
+      </a>
+
+      <SocialLinks />
+
+      <slot />
+    </main>
+  </body>
+</html>

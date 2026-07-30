@@ -1,0 +1,89 @@
+---
+interface Props {
+  heading: string;
+  blurb: string;
+  /** Google Forms embed URL (the ?embedded=true variant). */
+  src: string;
+  /** Accessible name for the iframe. */
+  formTitle: string;
+}
+
+const { heading, blurb, src, formTitle } = Astro.props;
+const headingId = "form-heading";
+---
+
+<section class="page-shell" aria-labelledby={headingId}>
+  <div class="form-shell">
+    <header class="form-header">
+      <h1 id={headingId}>{heading}</h1>
+      <p>{blurb}</p>
+    </header>
+
+    <div class="form-card">
+      <iframe
+        class="embedded-form"
+        src={src}
+        title={formTitle}
+        loading="lazy"
+        referrerpolicy="no-referrer">Loading…</iframe
+      >
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  .form-header {
+    margin-bottom: 18px;
+    text-align: center;
+    text-shadow: 0 8px 34px rgba(0, 0, 0, 0.72);
+  }
+
+  .form-header h1 {
+    margin: 0 0 10px;
+    font-size: clamp(2rem, 5vw, 4rem);
+    line-height: 0.95;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  .form-header p {
+    max-width: 52rem;
+    margin: 0 auto;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(1rem, 1.6vw, 1.1rem);
+    line-height: 1.55;
+  }
+
+  .form-card {
+    border-radius: var(--panel-radius);
+    border: 1px solid rgba(215, 25, 32, 0.34);
+    background:
+      linear-gradient(180deg, rgba(215, 25, 32, 0.08), rgba(0, 0, 0, 0.24)),
+      rgba(0, 0, 0, 0.42);
+    backdrop-filter: blur(10px);
+    box-shadow:
+      0 18px 46px rgba(0, 0, 0, 0.28),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+    overflow: hidden;
+  }
+
+  .embedded-form {
+    display: block;
+    width: 100%;
+    min-height: 2150px;
+    border: 0;
+    background: #ffffff;
+  }
+
+  @media (max-width: 900px) {
+    .form-card {
+      border-radius: 18px;
+    }
+
+    .embedded-form {
+      min-height: 2300px;
+    }
+  }
+</style>

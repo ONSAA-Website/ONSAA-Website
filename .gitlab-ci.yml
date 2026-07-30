@@ -1,0 +1,37 @@
+# GitLab Pages preview build.
+#
+# GitLab Pages serves a project site from a subpath, so the build sets
+# ASTRO_BASE to $CI_PROJECT_NAME. If this project is later served from a
+# domain root (custom domain / group root project), drop the ASTRO_BASE line.
+image: node:22
+
+stages:
+  - build
+  - deploy
+
+variables:
+  ASTRO_BASE: "/$CI_PROJECT_NAME/"
+
+build:
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+# `pages` is the reserved job name GitLab looks for; it must publish to public/.
+pages:
+  stage: deploy
+  needs: ["build"]
+  script:
+    - mv dist public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH

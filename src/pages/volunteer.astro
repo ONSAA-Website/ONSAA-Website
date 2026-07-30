@@ -1,0 +1,21 @@
+---
+import Layout from "../layouts/Layout.astro";
+import EmbeddedForm from "../components/EmbeddedForm.astro";
+
+const volunteerFormUrl =
+  "https://docs.google.com/forms/d/e/1FAIpQLSdadMqgjt0S-5plXOmRvntDIFIfrBSf8wmhxeTIHUf-PlnYmg/viewform?embedded=true";
+---
+
+<Layout
+  title="Volunteer with us | ONSAA"
+  description="Volunteer with ONSAA and join student organizing across Ontario."
+  current="/volunteer/"
+  variant="form"
+>
+  <EmbeddedForm
+    heading="Support the Strike Motion"
+    blurb="Fill out the form below to show your support."
+    src={volunteerFormUrl}
+    formTitle="ONSAA volunteer form"
+  />
+</Layout>
