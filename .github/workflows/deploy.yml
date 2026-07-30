@@ -1,6 +1,16 @@
 # Public deploy: builds the Astro site and publishes to GitHub Pages on main.
 # Replaces the old jekyll-gh-pages.yml, which ran Jekyll against the raw HTML.
 #
+# `main` here is a push mirror of GitLab's main (gitlab.m.onsaa.org), as is
+# `draft`. Nobody commits to this repo directly and the draft -> main merge
+# happens on GitLab, so this workflow is both the deploy and the last line of
+# defence: mirroring is not gated on GitLab CI passing, so the type-check and
+# build below are what stop a bad merge from reaching the live domain. A
+# failure here leaves the previous deploy serving.
+#
+# ci.yml runs the same check+build on `draft` beforehand, so by the time a
+# change lands here it has already been proven on a GitHub runner.
+#
 # If Pages serves this as a *project* site (username.github.io/onsaa-site),
 # set ASTRO_BASE to "/onsaa-site/" below. For a custom domain at the root,
 # leave it unset.
@@ -23,6 +33,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,11 +41,15 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # .nvmrc, so GitHub Actions, GitLab CI and local dev cannot drift.
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Type-check
+        run: npm run check
 
       - name: Build
         run: npm run build
@@ -55,6 +70,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build
     steps:
       - name: Deploy to GitHub Pages

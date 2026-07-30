@@ -6,13 +6,34 @@ interface Props {
   src: string;
   /** Accessible name for the iframe. */
   formTitle: string;
+  /**
+   * Height reserved for the embed, in px. A Google Form is cross-origin, so
+   * its real height cannot be read and this cannot be automatic — too small
+   * and the form scrolls inside its own frame, too large and it leaves a white
+   * slab underneath. Eyeball each form and set this per page; the defaults are
+   * the numbers the pre-Astro pages used.
+   */
+  minHeight?: number;
+  /** Same, below the 900px breakpoint. */
+  minHeightMobile?: number;
 }
 
-const { heading, blurb, src, formTitle } = Astro.props;
+const {
+  heading,
+  blurb,
+  src,
+  formTitle,
+  minHeight = 2150,
+  minHeightMobile = 2300,
+} = Astro.props;
 const headingId = "form-heading";
 ---
 
-<section class="page-shell" aria-labelledby={headingId}>
+<section
+  class="page-shell"
+  aria-labelledby={headingId}
+  style={`--form-min-height: ${minHeight}px; --form-min-height-mobile: ${minHeightMobile}px;`}
+>
   <div class="form-shell">
     <header class="form-header">
       <h1 id={headingId}>{heading}</h1>
@@ -72,7 +93,7 @@ const headingId = "form-heading";
   .embedded-form {
     display: block;
     width: 100%;
-    min-height: 2150px;
+    min-height: var(--form-min-height, 2150px);
     border: 0;
     background: #ffffff;
   }
@@ -83,7 +104,7 @@ const headingId = "form-heading";
     }
 
     .embedded-form {
-      min-height: 2300px;
+      min-height: var(--form-min-height-mobile, 2300px);
     }
   }
 </style>

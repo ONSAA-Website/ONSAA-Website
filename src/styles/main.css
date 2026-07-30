@@ -4,8 +4,22 @@
   --text: #ffffff;
   --shadow: rgba(0, 0, 0, 0.72);
   --edge-size: clamp(10px, 1.4vw, 18px);
-  --background-image: url("../assets/background.jpeg");
+  /*
+   * Set by Layout.astro to a sharp-optimised webp. Referencing the source file
+   * here instead would ship the full-size original: CSS url() is resolved by
+   * Vite and never passes through Astro's image pipeline.
+   */
+  --background-image: none;
   --nav-width: 200px;
+  /*
+   * "Inter Variable" is the family name @fontsource-variable/inter declares —
+   * *not* "Inter". Layout.astro imports the package; without that import (or
+   * with a bare "Inter" here) every rule silently falls through to the system
+   * stack, which is what the pre-Astro site was actually rendering in.
+   */
+  --font-sans:
+    "Inter Variable", Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 * {
@@ -23,7 +37,7 @@ body {
   min-height: 100svh;
   overflow-x: hidden;
   overflow-y: auto;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   color: var(--text);
   background: #050505;
 }
