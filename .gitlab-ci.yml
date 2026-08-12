@@ -1,22 +1,8 @@
-# GitLab is the source of truth for this site. This pipeline does two things:
-#
-#   pages  - publishes a preview of `draft` to GitLab Pages
-#   verify - proves every other branch builds, without publishing anything
-#
-# Production is NOT deployed from here. `draft` and `main` are both
-# push-mirrored to github.com/arpitdoesphoto/onsaa-site (Settings -> Repository
-# -> Mirroring repositories), where ci.yml validates draft and deploy.yml
-# publishes main to the live domain.
-#
-# The draft -> main merge happens HERE, via merge request. Never on GitHub: the
-# mirror force-pushes, so a merge commit made there would be overwritten by the
-# next sync of GitLab's main.
-#
-# Node version comes from .nvmrc so this, GitHub Actions, and local dev cannot
-# drift apart. Astro 7 requires >=22.12.
+# GitLab deploys a preview from draft.
+# GitHub validates draft and deploys main.
 
 default:
-  image: node:24
+  image: node:24-alpine
   cache:
     key:
       files:
@@ -27,50 +13,21 @@ default:
     - npm ci --cache .npm --prefer-offline
 
 stages:
-  - verify
   - deploy
 
-# Everything that is not `draft`, including main before it is mirrored to
-# GitHub. Catches a bad merge here rather than on the production deploy.
-verify:
-  stage: verify
-  # Safe to cancel: it publishes nothing. Superseded runs on the same branch
-  # get killed rather than burning a runner. Needs "Auto-cancel redundant
-  # pipelines" in CI/CD settings; harmless if that is off.
-  #
-  # Deliberately NOT set on `pages` below — cancelling that job cancels the
-  # deployment, so a fast run of draft pushes would silently leave the preview
-  # stale. Same reasoning as cancel-in-progress: false in deploy.yml.
-  interruptible: true
-  script:
-    - npm run check
-    - npm run build
-  rules:
-    - if: $CI_COMMIT_BRANCH != "draft"
-
-# `pages` is the reserved job name GitLab looks for; it must publish to public/.
 pages:
   stage: deploy
   variables:
-    # Without this, `site` falls back to https://onsaa.org and the preview
-    # emits canonical/og:image/sitemap URLs pointing at production.
     ASTRO_SITE: $CI_PAGES_URL
   script:
     - npm run check
-    # Pages serves a project from the path inside CI_PAGES_URL, and for a
-    # project in a subgroup that path is NOT just the project name: this repo
-    # lives at experimental/development/onsaa-site, so the top-level group
-    # becomes the subdomain and "/development/onsaa-site/" becomes the path.
-    # Deriving it from CI_PAGES_URL keeps the build correct no matter how the
-    # instance's Pages domain is configured, or if the project is ever moved.
-    - echo "CI_PAGES_URL = ${CI_PAGES_URL}"
-    - PAGES_PATH="$(echo "$CI_PAGES_URL" | sed -e 's|^[a-z][a-z0-9+.-]*://[^/]*||' -e 's|/*$||')"
-    - export ASTRO_BASE="${PAGES_PATH}/"
-    - echo "ASTRO_BASE = ${ASTRO_BASE}"
+    - |
+      pages_path="$(printf '%s' "$CI_PAGES_URL" | sed -e 's|^[a-z][a-z0-9+.-]*://[^/]*||' -e 's|/*$||')"
+      export ASTRO_BASE="${pages_path}/"
+      printf 'Preview URL: %s\n' "$CI_PAGES_URL"
+      printf 'Preview base path: %s\n' "$ASTRO_BASE"
     - npm run build
-    - mv dist public
-  artifacts:
-    paths:
-      - public
+  pages:
+    publish: dist
   rules:
-    - if: $CI_COMMIT_BRANCH == "draft"
+    - if: '$CI_COMMIT_BRANCH == "draft"'
