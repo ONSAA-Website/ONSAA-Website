@@ -31,11 +31,11 @@ import Layout from "../layouts/Layout.astro";
               needs.
               <ul>
                 <li>
-                  Phone:
+                  Phone:{" "}
                   <a href="tel:+14163384766">416-338-4766</a>
                 </li>
                 <li>
-                  Toll-free:
+                  Toll-free:{" "}
                   <a href="tel:+18773383398">1-877-338-3398</a>
                 </li>
               </ul>
@@ -46,7 +46,7 @@ import Layout from "../layouts/Layout.astro";
               transitional housing with wraparound supports.
               <ul>
                 <li>
-                  Phone:
+                  Phone:{" "}
                   <a href="tel:+14163648228">416-364-8228</a>
                 </li>
               </ul>
@@ -58,7 +58,7 @@ import Layout from "../layouts/Layout.astro";
               domestic violence.
               <ul>
                 <li>
-                  Phone:
+                  Phone:{" "}
                   <a href="tel:+16477339155">647-733-9155</a>
                 </li>
               </ul>
@@ -100,7 +100,7 @@ import Layout from "../layouts/Layout.astro";
               students living in North York.
               <ul>
                 <li>
-                  Intake:
+                  Intake:{" "}
                   <a href="tel:+14166357771">416-635-7771 ext. 4600</a>
                 </li>
               </ul>
@@ -122,7 +122,7 @@ import Layout from "../layouts/Layout.astro";
             </li>
 
             <li>
-              <strong>211 Ontario</strong> — Dial
+              <strong>211 Ontario</strong> — Dial{" "}
               <a href="tel:211">211</a> to connect with services that can help locate
               free or low-cost prepared meals and food banks across Toronto.
             </li>
@@ -146,6 +146,12 @@ import Layout from "../layouts/Layout.astro";
     font-size: 1.05rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+  }
+
+  .resource-card a,
+  .article-body a {
+    color: #fff;
+    text-decoration: underline;
   }
 
   .resource-card ul {
