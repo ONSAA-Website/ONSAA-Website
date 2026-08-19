@@ -118,9 +118,8 @@ body {
 
 .side-tabs {
   position: fixed;
+  top: 155px;
   left: clamp(18px, 2vw, 28px);
-  top: 50%;
-  transform: translateY(-50%);
   z-index: 30;
   width: min(var(--nav-width), calc(100vw - 32px));
   display: flex;
@@ -638,4 +637,17 @@ body {
   .signature-value-row {
     gap: 8px;
   }
+}
+
+.external-icon {
+  width: 1.1em;
+  height: 1.1em;
+  max-width: 100%;
+  max-height: 100%;
+  margin-left: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
