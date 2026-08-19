@@ -140,7 +140,16 @@ import Layout from "../layouts/Layout.astro";
     gap: 18px;
   }
 
+  .resource-card {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+
   .resource-card h2 {
+    padding: 6px 0 6px 12px;
+    border-left: 5px solid var(--accent);
     margin: 0 0 10px;
     color: #fff;
     font-size: 1.05rem;
@@ -157,6 +166,10 @@ import Layout from "../layouts/Layout.astro";
   .resource-card ul {
     margin: 12px 0 0;
     padding-left: 18px;
+  }
+
+  .resource-card > ul > li + li {
+    margin-top: 18px;
   }
 
   @media (max-width: 900px) {
