@@ -19,7 +19,7 @@ node_modules/
 # macOS system files
 .DS_Store
 
-# environment (PUBLIC_* build vars; see .env.example)
+# environment
 .env
 .env.*
 !.env.example
