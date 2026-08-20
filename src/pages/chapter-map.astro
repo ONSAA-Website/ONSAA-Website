@@ -1,0 +1,308 @@
+---
+// Will include brief overviews of current campaigns by chapter.
+// City names not displayed; pins are cramped in GTA region.
+import Layout from "../layouts/Layout.astro";
+import { Image } from "astro:assets";
+import ontarioMap from "../assets/ontario-map.png";
+
+const chapters = [
+  {
+    id: "toronto",
+    name: "Toronto",
+    top: "86%",
+    left: "78%",
+    blurb: "UofT, OCAD",
+    email: "toronto@onsaa.org",
+    instagram: "@tostudentsagainstausterity",
+  },
+  {
+    id: "hamilton",
+    name: "Hamilton",
+    top: "90%",
+    left: "72%",
+    blurb: "McMaster University",
+    email: "hamilton@onsaa.org",
+    instagram: "@studentsagainstausterity",
+  },
+  {
+    id: "london",
+    name: "London",
+    top: "93%",
+    left: "64%",
+    blurb: "Western University",
+    email: "london@onsaa.org",
+    instagram: "@londonstudentsagainstausterity",
+  },
+  {
+    id: "guelph",
+    name: "Guelph",
+    top: "86%",
+    left: "70%",
+    blurb: "University of Guelph",
+    email: "guelph@onsaa.org",
+    instagram: "@gsaa_official",
+  },
+];
+---
+
+<Layout
+  title="Our chapters | ONSAA"
+  description="Find an ONSAA chapter near you."
+  current="/chapter-map/"
+  contentMax="900px"
+>
+  <section class="page-shell map-page">
+    <div class="inner-shell">
+      <div class="map-wrap">
+        <Image
+          src={ontarioMap}
+          width={860}
+          alt="Map of Ontario with ONSAA chapter cities marked"
+          loading="eager"
+        />
+
+        {
+          chapters.map((c) => (
+            <div class="marker" style={`top:${c.top}; left:${c.left};`}>
+              <div class="marker-label-wrap">
+                <button
+                  class="dot"
+                  aria-expanded="false"
+                  aria-controls={`popup-${c.id}`}
+                >
+                  <span class="sr-only">{c.name}</span>
+                </button>
+
+                {/* <span class="city-label" aria-hidden="true">{c.name}</span> */} 
+              </div>
+
+              <div class="popup" id={`popup-${c.id}`} role="tooltip">
+                <h2>{c.name}</h2>
+                <p>{c.blurb}</p>
+
+                <hr class="popup-divider" />
+
+                <div class="popup-contact">
+                  <a
+                    href={`https://instagram.com/${c.instagram.replace("@", "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="popup-ig-link"
+                    aria-label={`Follow ${c.name} chapter on Instagram`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+                      <path fill="currentColor" d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2Zm0 1.8A3.96 3.96 0 0 0 3.8 7.75v8.5a3.96 3.96 0 0 0 3.95 3.95h8.5a3.96 3.96 0 0 0 3.95-3.95v-8.5a3.96 3.96 0 0 0-3.95-3.95h-8.5ZM12 7.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8Zm0 1.8a3.1 3.1 0 1 0 0 6.2 3.1 3.1 0 0 0 0-6.2Zm5.1-2.95a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Z" />
+                    </svg>
+                    <span class="sr-only">{c.instagram}</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const markers = document.querySelectorAll(".marker");
+
+  markers.forEach((marker) => {
+    const button = marker.querySelector(".dot");
+
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const isOpen = button.getAttribute("aria-expanded") === "true";
+
+      markers.forEach((m) => {
+        m.querySelector(".dot").setAttribute("aria-expanded", "false");
+      });
+
+      button.setAttribute("aria-expanded", isOpen ? "false" : "true");
+    });
+  });
+
+  document.addEventListener("click", () => {
+    markers.forEach((m) => {
+      m.querySelector(".dot").setAttribute("aria-expanded", "false");
+    });
+  });
+</script>
+
+<style is:global>
+  .map-page.page-shell {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    overflow: hidden;
+  }
+
+  .map-page .inner-shell {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .map-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .map-wrap img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    filter: invert(1);
+  }
+
+  .marker {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    z-index: 1;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: none;
+    background: #fff;
+    padding: 0;
+    transition: background 150ms ease, transform 150ms ease;
+  }
+
+  .city-label {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .marker-label-wrap {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;            
+  }
+
+  .popup {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    width: 220px;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    background: rgba(10, 10, 10, 0.92);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 150ms ease, transform 150ms ease;
+    z-index: 10;
+  }
+
+  .popup h2 {
+    margin: 0 0 6px;
+    color: #fff;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .popup p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .popup-contact {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 4px;
+  }
+
+  .popup-ig-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    color: var(--accent, #ff3b30);
+    flex: 0 0 auto;
+    transition: transform 150ms ease, opacity 150ms ease;
+    transform-origin: center;
+  }
+
+  .popup-ig-link svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+  }
+
+  .popup-ig-link:hover,
+  .popup-ig-link:focus-visible {
+    opacity: 0.85;
+    transform: scale(1.15);
+  }
+
+  .popup-divider {
+    width: 100%;
+    margin: 10px 0;
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .marker:hover .popup,
+  .dot[aria-expanded="true"] + .popup {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .marker:hover,
+  .marker:has(.dot[aria-expanded="true"]) {
+    z-index: 20;
+  }
+
+  .marker::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    transform: translateX(-50%);
+    width: 220px;
+    height: 14px;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
