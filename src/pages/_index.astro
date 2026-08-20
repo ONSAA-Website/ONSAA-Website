@@ -1,4 +1,6 @@
 ---
+// This version has the more consipicuous signature tracker.
+
 import Layout from "../layouts/Layout.astro";
 import { url } from "../lib/url";
 
@@ -39,21 +41,20 @@ const appsScriptUrl =
         </div>
       </div>
 
+      <section class="signature-panel" aria-label="Petition signatures">
+        <div class="signature-value-row">
+          <strong
+            ><span id="signature-count" class="is-loading" aria-live="polite"
+              >—</span
+            ></strong
+          >
+          <span class="signature-unit">students have signed.</span>
+        </div>
+      </section>
+
       <a class="button" href={url("/petition/")} style="margin-top: 14px;">
-  Sign the petition
-</a>
-
-<section class="signature-panel" aria-label="Petition signatures">
-  <div class="signature-value-row">
-    <strong
-      ><span id="signature-count" class="is-loading" aria-live="polite"
-        >—</span
-      ></strong
-    >
-    <span class="signature-unit">students have signed.</span>
-  </div>
-</section>
-
+        Sign the petition
+      </a>
     </div>
   </section>
 </Layout>
