@@ -1,9 +1,11 @@
 # Internal documentation
 
-Notes for the ONSAA site team: deployment details, operational runbooks,
-anything that should not be visible in the public GitHub mirror.
+This folder holds notes for the ONSAA site team. It covers deployment details, operational runbooks, and other content that must stay off the public GitHub mirror.
 
-This folder is excluded from the `mirror-github` CI job (see
-`.gitlab-ci.yml`) — it stays on GitLab only. It is not a secrets store;
-credentials still belong in Vault or masked CI/CD variables, not in files
-here.
+The `mirror-github` CI job excludes this folder. See `.gitlab-ci.yml` for the exact step. Content here stays on GitLab only.
+
+This folder is not a secret store. Keep credentials in Vault or in masked CI/CD variables, not in files here.
+
+## Contents
+
+- [github-mirror-pipeline-decisions.md](github-mirror-pipeline-decisions.md): the reasons behind the GitHub mirror pipeline safety controls added on 2026-08-20.
