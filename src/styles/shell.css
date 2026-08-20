@@ -1,0 +1,215 @@
+/*
+ * Shared inner-page shell.
+ *
+ * These rules were duplicated byte-for-byte in the <style> block of about-us,
+ * articles, news, resource-guides, donate and donate-success. They are lifted
+ * here once; per-page files now only carry the styles unique to that page.
+ *
+ * --content-max is set per page via the Layout's `contentMax` prop.
+ */
+
+:root {
+  --frame-gap: calc(var(--edge-size) + 18px);
+  --panel-radius: 24px;
+  --content-max: 980px;
+  --scroll-bottom-space: 120px;
+}
+
+/* Inner pages and form pages lock the viewport and scroll inside .page-shell. */
+.page.page-inner {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+.page.page-form {
+  position: fixed;
+  inset: 0;
+  min-height: 100svh;
+  padding: 0;
+  overflow: hidden;
+}
+
+.page-inner-body,
+.page-form-body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.page-shell {
+  position: fixed;
+  top: var(--frame-gap);
+  right: var(--frame-gap);
+  bottom: var(--frame-gap);
+  left: calc(var(--nav-width) + var(--frame-gap) + 18px);
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 84px 18px var(--scroll-bottom-space);
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.inner-shell {
+  width: min(var(--content-max), 100%);
+  margin: 0 auto;
+}
+
+.form-shell {
+  width: min(920px, 100%);
+  margin: 0 auto;
+}
+
+/* Chrome must stay above the scrolling shell. */
+.side-tabs,
+.logo-frame,
+.social-links {
+  position: fixed;
+  z-index: 9999;
+}
+
+.edge,
+.edge-blur,
+.page-shell::before,
+.page-shell::after {
+  pointer-events: none;
+}
+
+/* Shared panel/card treatment used by every inner page. */
+.panel,
+.hero-panel,
+.content-panel,
+.card,
+.article-card,
+.news-item,
+.resource-card {
+  border: 1px solid rgba(215, 25, 32, 0.32);
+  border-radius: var(--panel-radius);
+  background:
+    linear-gradient(180deg, rgba(215, 25, 32, 0.06), rgba(0, 0, 0, 0.24)),
+    rgba(10, 10, 10, 0.48);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.34);
+}
+
+/*
+ * All padding for the panel/card family lives here, not in the per-page style
+ * blocks. Astro emits a page's <style> *before* the shared stylesheet link, so
+ * a selector defined in both places would resolve opposite to the original
+ * source order. Keeping each selector in exactly one file makes the cascade
+ * order irrelevant instead of merely harmless.
+ */
+.panel,
+.hero-panel,
+.content-panel {
+  padding: 28px;
+}
+
+.card {
+  padding: 22px;
+}
+
+.article-card,
+.news-item,
+.resource-card {
+  padding: 24px;
+}
+
+.panel,
+.hero-panel {
+  margin-bottom: 18px;
+}
+
+.panel h1 {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 0.95;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.05em;
+  color: #fff;
+}
+
+.panel p,
+.article-card p,
+.news-item p,
+.resource-card p,
+.resource-card li {
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+}
+
+/*
+ * Page headers (.ab-header, .a-header, .news-header, .r-header) were four
+ * copies of the same rule keyed to different class names.
+ */
+.page-header {
+  max-width: 52rem;
+  margin: 0 auto;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(1rem, 1.6vw, 1.1rem);
+  line-height: 1.55;
+}
+
+.page-header h1 {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 0.95;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.05em;
+  color: #fff;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .page-inner-body,
+  .page-form-body {
+    height: auto;
+    overflow: auto;
+  }
+
+  .page.page-inner,
+  .page.page-form {
+    position: relative;
+    inset: auto;
+    min-height: 100dvh;
+  }
+
+  .page-shell {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: auto;
+    overflow: visible;
+    padding:
+      max(96px, var(--frame-gap))
+      max(16px, var(--frame-gap))
+      max(96px, var(--frame-gap));
+  }
+
+  .inner-shell,
+  .form-shell {
+    width: 100%;
+  }
+
+  .panel,
+  .hero-panel,
+  .content-panel,
+  .card,
+  .article-card,
+  .news-item,
+  .resource-card {
+    border-radius: 18px;
+  }
+}

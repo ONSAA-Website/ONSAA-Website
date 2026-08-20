@@ -1,0 +1,99 @@
+---
+import { getCollection, render } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const articles = await getCollection("articles", ({ data }) => !data.draft);
+
+  return articles.map((article) => ({
+    params: { slug: article.id },
+    props: { article },
+  }));
+}
+
+const { article } = Astro.props;
+const { Content } = await render(article);
+
+const dateFormat = new Intl.DateTimeFormat("en-CA", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
+});
+---
+
+<Layout
+  title={`${article.data.title} | ONSAA`}
+  description={article.data.summary}
+  current="/articles/"
+  contentMax="1040px"
+>
+  <section class="page-shell">
+    <div class="inner-shell">
+      <article class="article-page">
+        <p class="article-type">
+          {article.data.type} — {dateFormat.format(article.data.date)}
+        </p>
+
+        <h1>{article.data.title}</h1>
+
+        <p class="article-summary">{article.data.summary}</p>
+
+        <div class="article-body">
+          <Content />
+        </div>
+      </article>
+    </div>
+  </section>
+</Layout>
+
+<style is:global>
+  .article-page h1 {
+    margin: 0 0 18px;
+    color: #fff;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  .article-summary {
+    max-width: 760px;
+    margin: 0 0 32px;
+    color: #ddd;
+    font-size: 1.15rem;
+    line-height: 1.6;
+  }
+
+  .article-body {
+    max-width: 760px;
+    color: #fff;
+    line-height: 1.7;
+  }
+
+  .article-body h2,
+  .article-body h3 {
+    margin-top: 2rem;
+    color: #fff;
+  }
+
+  .article-body p {
+    margin: 0 0 1.25rem;
+  }
+
+  .article-body ul,
+  .article-body ol {
+    margin: 0 0 1.25rem;
+    padding-left: 1.5rem;
+  }
+
+  .article-body a {
+    color: inherit;
+  }
+
+  .article-type {
+    margin: 0 0 12px;
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+</style>

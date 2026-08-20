@@ -1,0 +1,25 @@
+# Dependency updates for the GitHub mirror.
+#
+# Note the direction of the sync: GitLab is the source of truth and is
+# push-mirrored to this repo, so a Dependabot PR merged HERE would be
+# overwritten by the next mirror push. Treat these PRs as notifications —
+# apply the bump on GitLab and let it flow back down.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    # Astro's own ecosystem moves fast; one PR for the routine patch churn
+    # keeps the noise down, with majors raised individually.
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly

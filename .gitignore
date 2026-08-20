@@ -1,0 +1,22 @@
+# build output
+dist/
+.astro/
+
+# dependencies
+# package-lock.json is intentionally NOT ignored: CI runs `npm ci`, which
+# requires a committed lockfile.
+node_modules/
+.yarnrc.yml
+.yarn/
+
+# macOS system files
+.DS_Store
+
+# environment (PUBLIC_* build vars; see .env.example)
+.env
+.env.*
+!.env.example
+
+# stripe server secrets
+server/.env
+server/.env.*
