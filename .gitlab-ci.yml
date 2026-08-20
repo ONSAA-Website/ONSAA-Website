@@ -1,0 +1,33 @@
+# GitLab deploys a preview from draft.
+# GitHub validates draft and deploys main.
+
+default:
+  image: node:24-alpine
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+  variables:
+    ASTRO_SITE: $CI_PAGES_URL
+  script:
+    - npm run check
+    - |
+      pages_path="$(printf '%s' "$CI_PAGES_URL" | sed -e 's|^[a-z][a-z0-9+.-]*://[^/]*||' -e 's|/*$||')"
+      export ASTRO_BASE="${pages_path}/"
+      printf 'Preview URL: %s\n' "$CI_PAGES_URL"
+      printf 'Preview base path: %s\n' "$ASTRO_BASE"
+    - npm run build
+  pages:
+    publish: dist
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "draft"'

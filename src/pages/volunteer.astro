@@ -1,0 +1,22 @@
+---
+import Layout from "../layouts/Layout.astro";
+import EmbeddedForm from "../components/EmbeddedForm.astro";
+
+const volunteerFormUrl =
+  "https://docs.google.com/forms/d/e/1FAIpQLSfXMqUQHqTYwb4fut-cKCHLAgxrK9P9fSH7j2TqMQj1dfgiwA/viewform?embedded=true";
+---
+
+<Layout
+  title="Volunteer with us | ONSAA"
+  description="Volunteer with ONSAA and join student organizing across Ontario."
+  current="/volunteer/"
+  variant="form"
+  preconnect={["https://docs.google.com", "https://fonts.gstatic.com"]}
+>
+  <EmbeddedForm
+    heading="Volunteer with us"
+    blurb="Fill out the form below to volunteer with us."
+    src={volunteerFormUrl}
+    formTitle="ONSAA volunteer form"
+  />
+</Layout>

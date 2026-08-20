@@ -1,0 +1,170 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { url } from "../lib/url";
+
+const targetDateTime = "2026-11-01T08:30:00-05:00";
+const appsScriptUrl =
+  "https://script.google.com/macros/s/AKfycbzmT6sFSc_UnVyR6dtc2LxlnsUrjEh8aNXdzdJhStn9MX1QhdpeWfchDSVTx51rWRyd/exec";
+---
+
+<Layout
+  title="ONSAA"
+  description="The ONSAA Landing Page."
+  current="/"
+  variant="hero"
+>
+  <section class="content" aria-label="Landing page introduction">
+    <div class="hero-core">
+      <div class="title-lock">
+        <h1>ONSAA</h1>
+        <p class="subline">The Ontario Students Against Austerity</p>
+      </div>
+
+      <div class="countdown" aria-label="Countdown timer">
+        <div class="countdown-card">
+          <span class="countdown-number" id="days">00</span>
+          <span class="countdown-label">Days</span>
+        </div>
+        <div class="countdown-card">
+          <span class="countdown-number" id="hours">00</span>
+          <span class="countdown-label">Hours</span>
+        </div>
+        <div class="countdown-card">
+          <span class="countdown-number" id="minutes">00</span>
+          <span class="countdown-label">Minutes</span>
+        </div>
+        <div class="countdown-card">
+          <span class="countdown-number" id="seconds">00</span>
+          <span class="countdown-label">Seconds</span>
+        </div>
+      </div>
+
+      <a class="button" href={url("/petition/")} style="margin-top: 20px;">
+  Sign the petition
+</a>
+
+<section class="signature-panel" aria-label="Petition signatures">
+  <div class="signature-value-row">
+    <strong
+      ><span id="signature-count" class="is-loading" aria-live="polite"
+        >—</span
+      ></strong
+    >
+    <span class="signature-unit">students have signed.</span>
+  </div>
+</section>
+
+    </div>
+  </section>
+</Layout>
+
+<script is:inline define:vars={{ targetDateTime, appsScriptUrl }}>
+  const countdownElements = {
+    days: document.getElementById("days"),
+    hours: document.getElementById("hours"),
+    minutes: document.getElementById("minutes"),
+    seconds: document.getElementById("seconds"),
+  };
+
+  const signatureCountElement = document.getElementById("signature-count");
+  const prefersReducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  function formatNumber(value) {
+    return String(value).padStart(2, "0");
+  }
+
+  function formatCount(value) {
+    return Number(value).toLocaleString();
+  }
+
+  function updateCountdown() {
+    const targetTime = new Date(targetDateTime).getTime();
+    const currentTime = Date.now();
+    const remaining = Math.max(0, targetTime - currentTime);
+
+    const totalSeconds = Math.floor(remaining / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    countdownElements.days.textContent = formatNumber(days);
+    countdownElements.hours.textContent = formatNumber(hours);
+    countdownElements.minutes.textContent = formatNumber(minutes);
+    countdownElements.seconds.textContent = formatNumber(seconds);
+  }
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function animateSignatureCount(targetValue) {
+    const finalValue = Math.max(0, Number(targetValue) || 0);
+
+    signatureCountElement.classList.remove("is-loading");
+
+    if (prefersReducedMotion) {
+      signatureCountElement.textContent = formatCount(finalValue);
+      return;
+    }
+
+    signatureCountElement.classList.add("is-animating");
+
+    const flickerDuration = 420;
+    const countDuration = 1400;
+    const flickerStart = performance.now();
+
+    function flickerFrame(now) {
+      const elapsed = now - flickerStart;
+      const progress = Math.min(elapsed / flickerDuration, 1);
+
+      const fakeMax = Math.max(52, finalValue * 3);
+      const jitter = Math.floor(Math.random() * fakeMax);
+      signatureCountElement.textContent = formatCount(jitter);
+
+      if (progress < 1) {
+        requestAnimationFrame(flickerFrame);
+      } else {
+        const countStart = performance.now();
+
+        function countFrame(frameNow) {
+          const countElapsed = frameNow - countStart;
+          const countProgress = Math.min(countElapsed / countDuration, 1);
+          const eased = easeOutCubic(countProgress);
+          const currentValue = Math.round(finalValue * eased);
+
+          signatureCountElement.textContent = formatCount(currentValue);
+
+          if (countProgress < 1) {
+            requestAnimationFrame(countFrame);
+          } else {
+            signatureCountElement.textContent = formatCount(finalValue);
+            signatureCountElement.classList.remove("is-animating");
+          }
+        }
+
+        requestAnimationFrame(countFrame);
+      }
+    }
+
+    requestAnimationFrame(flickerFrame);
+  }
+
+  async function loadSignatureCount() {
+    try {
+      const response = await fetch(appsScriptUrl);
+      const data = await response.json();
+      animateSignatureCount(data.count || 0);
+    } catch (error) {
+      console.error(error);
+      signatureCountElement.classList.remove("is-loading");
+      signatureCountElement.textContent = "0";
+    }
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+  loadSignatureCount();
+</script>
