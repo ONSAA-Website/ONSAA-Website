@@ -1,0 +1,54 @@
+---
+import { url } from "../lib/url";
+
+interface Props {
+  /** Path of the current page, e.g. "/about-us/". Drives aria-current. */
+  current?: string;
+}
+
+const { current } = Astro.props;
+
+// Single source of truth for the primary nav. Previously this list was copied
+// into all nine pages, which is how /index.html ended up linking to
+// "../petition/index.html" from the site root.
+const links = [
+  { href: "/", label: "Home" },
+  { href: "/about-us/", label: "About us" },
+  // { href: "/chapter-map/", label: "Our Chapters" },
+  { href: "/articles/", label: "Articles" },
+  { href: "/resource-guides/", label: "Resource guides" },
+  // { href: "/news/", label: "News and updates" }, entries to be added
+  { href: "/petition/", label: "Sign Petition" },
+  { href: "/volunteer/", label: "Volunteer with us" },
+  { href: "https://donate.stripe.com/00w8wR5EC1tB5b0baP9IQ00", label: "Donate", external:true },
+];
+---
+
+<nav class="side-tabs" aria-label="Primary">
+  {
+    links.map((link) => (
+      <a
+        href={link.external ? link.href : url(link.href)}
+        target={link.external ? "_blank" : undefined}
+        rel={link.external ? "noopener noreferrer" : undefined}
+        class:list={{ external: link.external }}
+        aria-current={link.href === current ? "page" : undefined}
+      >
+        <span>{link.label}</span>
+
+        {link.external && (
+          <svg
+            class="external-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path d="M14 3h7v7" />
+            <path d="M10 14 21 3" />
+            <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
+          </svg>
+        )}
+      </a>
+    ))
+  }
+</nav>

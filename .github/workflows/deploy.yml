@@ -1,0 +1,78 @@
+# Public deploy: builds the Astro site and publishes to GitHub Pages on main.
+# Replaces the old jekyll-gh-pages.yml, which ran Jekyll against the raw HTML.
+#
+# `main` here is a push mirror of GitLab's main (gitlab.m.onsaa.org), as is
+# `draft`. Nobody commits to this repo directly and the draft -> main merge
+# happens on GitLab, so this workflow is both the deploy and the last line of
+# defence: mirroring is not gated on GitLab CI passing, so the type-check and
+# build below are what stop a bad merge from reaching the live domain. A
+# failure here leaves the previous deploy serving.
+#
+# ci.yml runs the same check+build on `draft` beforehand, so by the time a
+# change lands here it has already been proven on a GitHub runner.
+#
+# If Pages serves this as a *project* site (username.github.io/onsaa-site),
+# set ASTRO_BASE to "/onsaa-site/" below. For a custom domain at the root,
+# leave it unset.
+name: Deploy site to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # .nvmrc, so GitHub Actions, GitLab CI and local dev cannot drift.
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+        env:
+          # ASTRO_BASE: "/onsaa-site/"   # uncomment for a project-site deploy
+          ASTRO_SITE: "https://onsaa.org"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
