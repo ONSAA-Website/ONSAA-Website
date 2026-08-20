@@ -58,6 +58,10 @@ pages:
 mirror-github:
   stage: deploy
   # Gated on the test stage: secret-scan and verify-main must pass first.
+  # Then waits 15 minutes before syncing to GitHub. A human operator can
+  # open the pipeline and either start it immediately or unschedule it
+  # during that window; doing nothing lets it fire automatically at 15m.
+  start_in: 15 minutes
   image:
     name: alpine/git
     entrypoint: [""]
@@ -74,3 +78,4 @@ mirror-github:
     - git push --force "https://x-access-token:${GITHUB_MIRROR_PAT}@github.com/ONSAA-Website/ONSAA-Website.git" mirror-main:main
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+      when: delayed
