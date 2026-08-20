@@ -1,48 +1,24 @@
 ---
-// Will include brief overviews of current campaigns by chapter.
-// City names not displayed; pins are cramped in GTA region.
+// Uses a custom SVG + Leaflet API to achieve a blank province outline with pixel-coordinate cities
+// Nearby markers auto-cluster into a clickable badge
+// Hovering a single marker shows its popup; "zoom out" button resets the view
+// No free pan/scroll/drag; click and hover interaction only
+
 import Layout from "../layouts/Layout.astro";
-import { Image } from "astro:assets";
 import ontarioMap from "../assets/ontario-map.png";
 
+const imgWidth = 860;
+const imgHeight = 1000;
+
+// [y, x] pixel positions measured directly on the source PNG at its natural size.
 const chapters = [
-  {
-    id: "toronto",
-    name: "Toronto",
-    top: "86%",
-    left: "78%",
-    blurb: "UofT, OCAD",
-    email: "toronto@onsaa.org",
-    instagram: "@tostudentsagainstausterity",
-  },
-  {
-    id: "hamilton",
-    name: "Hamilton",
-    top: "90%",
-    left: "72%",
-    blurb: "McMaster University",
-    email: "hamilton@onsaa.org",
-    instagram: "@studentsagainstausterity",
-  },
-  {
-    id: "london",
-    name: "London",
-    top: "93%",
-    left: "64%",
-    blurb: "Western University",
-    email: "london@onsaa.org",
-    instagram: "@londonstudentsagainstausterity",
-  },
-  {
-    id: "guelph",
-    name: "Guelph",
-    top: "86%",
-    left: "70%",
-    blurb: "University of Guelph",
-    email: "guelph@onsaa.org",
-    instagram: "@gsaa_official",
-  },
+  { id: "toronto", name: "Toronto", y: 120, x: 645, blurb: "UofT, OCAD", instagram: "tostudentsagainstausterity" },
+  { id: "hamilton", name: "Hamilton", y: 90, x: 620, blurb: "McMaster University", instagram: "studentsagainstausterity" },
+  { id: "london", name: "London", y: 65, x: 550, blurb: "Western University", instagram: "londonstudentsagainstausterity" },
+  { id: "guelph", name: "Guelph", y: 120, x: 590, blurb: "University of Guelph", instagram: "gsaa_official" },
 ];
+
+const clickZoomStep = 3;
 ---
 
 <Layout
@@ -53,79 +29,156 @@ const chapters = [
 >
   <section class="page-shell map-page">
     <div class="inner-shell">
-      <div class="map-wrap"><div class="map-inner">
-        <Image
-          src={ontarioMap}
-          width={860}
-          alt="Map of Ontario with ONSAA chapter cities marked"
-          loading="eager"
-        />
-
-        {
-          chapters.map((c) => (
-            <div class="marker" style={`top:${c.top}; left:${c.left};`}>
-              <div class="marker-label-wrap">
-                <button
-                  class="dot"
-                  aria-expanded="false"
-                  aria-controls={`popup-${c.id}`}
-                >
-                  <span class="sr-only">{c.name}</span>
-                </button>
-
-                {/* <span class="city-label" aria-hidden="true">{c.name}</span> */} 
-              </div>
-
-              <div class="popup" id={`popup-${c.id}`} role="tooltip">
-                <h2>{c.name}</h2>
-                <p>{c.blurb}</p>
-
-                <hr class="popup-divider" />
-
-                <div class="popup-contact">
-                  <a
-                    href={`https://instagram.com/${c.instagram.replace("@", "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="popup-ig-link"
-                    aria-label={`Follow ${c.name} chapter on Instagram`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
-                      <path fill="currentColor" d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2Zm0 1.8A3.96 3.96 0 0 0 3.8 7.75v8.5a3.96 3.96 0 0 0 3.95 3.95h8.5a3.96 3.96 0 0 0 3.95-3.95v-8.5a3.96 3.96 0 0 0-3.95-3.95h-8.5ZM12 7.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8Zm0 1.8a3.1 3.1 0 1 0 0 6.2 3.1 3.1 0 0 0 0-6.2Zm5.1-2.95a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Z" />
-                    </svg>
-                    <span class="sr-only">{c.instagram}</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))
-        }
-      </div></div>
+      <div class="map-wrap">
+        <div id="map"></div>
+        <button id="zoom-out-btn" class="zoom-out-btn" style="display:none;">← Zoom out</button>
+      </div>
     </div>
   </section>
 </Layout>
 
-<script>
-  const markers = document.querySelectorAll(".marker");
+<script define:vars={{ chapters, imgWidth, imgHeight, clickZoomStep, mapSrc: ontarioMap.src }}>
+  function loadLeafletAndCluster(callback) {
+    function loadScript(src) {
+      return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = resolve;
+        document.head.appendChild(script);
+      });
+    }
+    function loadCss(href) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+      document.head.appendChild(link);
+    }
 
-  markers.forEach((marker) => {
-    const button = marker.querySelector(".dot");
+    loadCss("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css");
+    loadCss("https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css");
+    loadCss("https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css");
 
-    button.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const isOpen = button.getAttribute("aria-expanded") === "true";
+    loadScript("https://unpkg.com/leaflet@1.9.4/dist/leaflet.js").then(() => {
+      loadScript("https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js").then(callback);
+    });
+  }
 
-      markers.forEach((m) => {
-        m.querySelector(".dot").setAttribute("aria-expanded", "false");
+  loadLeafletAndCluster(() => {
+    const map = L.map("map", {
+      crs: L.CRS.Simple,
+      minZoom: -3,
+      maxZoom: 4,
+      zoomSnap: 0.25,
+      zoomControl: false,
+      scrollWheelZoom: false,
+      dragging: false,
+      doubleClickZoom: false,
+      touchZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      tap: false,
+      attributionControl: false,
+    });
+
+    const bounds = [[0, 0], [imgHeight, imgWidth]];
+    L.imageOverlay(mapSrc, bounds).addTo(map);
+
+    map.fitBounds(bounds);
+    const homeZoom = map.getZoom();
+    const homeCenter = map.getCenter();
+
+    const zoomOutBtn = document.getElementById("zoom-out-btn");
+
+    const clusterGroup = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: false,
+      maxClusterRadius: 60,
+      iconCreateFunction: function (cluster) {
+        return L.divIcon({
+          html: `<div class="cluster-dot">${cluster.getChildCount()}</div>`,
+          className: "cluster-dot-wrap",
+          iconSize: L.point(32, 32),
+        });
+      },
+    });
+
+    chapters.forEach((c) => {
+      const igHandle = c.instagram;
+      const popupHtml = `
+        <div class="leaflet-popup-custom">
+          <h2>${c.name}</h2>
+          <p>${c.blurb}</p>
+          <hr class="popup-divider" />
+          <a href="https://instagram.com/${igHandle}" target="_blank" rel="noopener noreferrer" class="popup-ig-link" aria-label="Follow ${c.name} chapter on Instagram">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2Zm0 1.8A3.96 3.96 0 0 0 3.8 7.75v8.5a3.96 3.96 0 0 0 3.95 3.95h8.5a3.96 3.96 0 0 0 3.95-3.95v-8.5a3.96 3.96 0 0 0-3.95-3.95h-8.5ZM12 7.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8Zm0 1.8a3.1 3.1 0 1 0 0 6.2 3.1 3.1 0 0 0 0-6.2Zm5.1-2.95a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Z" />
+            </svg>
+            <span class="sr-only">@${igHandle}</span>
+          </a>
+        </div>
+      `;
+
+      const marker = L.marker([c.y, c.x], {
+        icon: L.divIcon({
+          html: `<div class="marker-icon"><div class="single-dot"></div><span class="marker-label">${c.name}</span></div>`,
+          className: "single-dot-wrap",
+          iconSize: L.point(80, 32),
+          iconAnchor: L.point(40, 6),
+        }),
       });
 
-      button.setAttribute("aria-expanded", isOpen ? "false" : "true");
-    });
-  });
+      marker.bindPopup(popupHtml, { closeButton: false, offset: [0, -10] });
+      
+      let closeTimeout;
 
-  document.addEventListener("click", () => {
-    markers.forEach((m) => {
-      m.querySelector(".dot").setAttribute("aria-expanded", "false");
+      marker.on("mouseover", () => {
+        clearTimeout(closeTimeout);
+        marker.openPopup();
+      });
+
+      marker.on("mouseout", () => {
+        closeTimeout = setTimeout(() => {
+          const popupEl = marker.getPopup().getElement();
+          if (popupEl && popupEl.matches(":hover")) return;
+          marker.closePopup();
+        }, 100);
+      });
+
+      marker.on("popupopen", () => {
+        const popupEl = marker.getPopup().getElement();
+        if (popupEl) {
+          popupEl.addEventListener("mouseenter", () => clearTimeout(closeTimeout));
+          popupEl.addEventListener("mouseleave", () => marker.closePopup());
+        }
+      });
+
+      marker.on("click", (e) => {
+        L.DomEvent.stopPropagation(e);
+      });
+
+      clusterGroup.addLayer(marker);
+    });
+
+    clusterGroup.on("clusterclick", (e) => {
+      L.DomEvent.stopPropagation(e.originalEvent);
+
+      const targetZoom = Math.min(
+        homeZoom + clickZoomStep,
+        map.getMaxZoom()
+      );
+
+      map.setView(e.layer.getLatLng(), targetZoom, {
+        animate: false,
+      });
+
+      zoomOutBtn.style.display = "block";
+    });
+
+    map.addLayer(clusterGroup);
+
+    zoomOutBtn.addEventListener("click", () => {
+      map.setView(homeCenter, homeZoom, { animate: false, });
+      zoomOutBtn.style.display = "none";
     });
   });
 </script>
@@ -150,102 +203,79 @@ const chapters = [
     flex: 1;
     min-height: 0;
     width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     overflow: hidden;
+    border-radius: 8px;
   }
 
-  .map-inner {
-  position: relative;
-  display: inline-flex;
-  max-width: 100%;
-  max-height: 100%;
-}
-
-  .map-inner img {
-    display: block;
-    width: auto;
-    height: auto;
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    filter: invert(1);
+  #map {
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 10, 10, 0.6);
   }
 
-  .marker {
-    position: absolute;
-    transform: translate(-50%, -50%);
+  .marker-icon {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
-    z-index: 1;
+    gap: 3px;
+    pointer-events: auto;
   }
 
-  .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: none;
-    background: #fff;
-    padding: 0;
-    transition: background 150ms ease, transform 150ms ease;
-  }
-
-  .city-label {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.7rem;
+  .marker-label {
+    color: #e13434;
+    font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     white-space: nowrap;
     pointer-events: none;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   }
 
-  .marker-label-wrap {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 4px;            
+  .leaflet-image-layer {
+    filter: invert(1);
   }
 
-  .popup {
-    position: absolute;
-    bottom: calc(100% + 10px);
-    left: 50%;
-    transform: translateX(-50%) translateY(4px);
-    width: 220px;
-    padding: 12px 14px;
+  .leaflet-popup-content-wrapper {
+    background: rgba(10, 10, 10, 0.94) !important;
+    color: #fff !important;
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: 6px;
-    background: rgba(10, 10, 10, 0.92);
-    backdrop-filter: blur(6px);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 150ms ease, transform 150ms ease;
-    z-index: 10;
   }
 
-  .popup h2 {
-    margin: 0 0 6px;
-    color: #fff;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+  .leaflet-popup-content {
+    margin: 12px 14px;
+    color: #fff !important;
   }
 
-  .popup p {
-    margin: 0;
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.85rem;
-    line-height: 1.5;
+  .leaflet-popup-tip {
+    background: rgba(10, 10, 10, 0.94) !important;
   }
 
-  .popup-contact {
-    display: flex;
-    justify-content: flex-start;
-    margin-top: 4px;
+  .leaflet-popup-custom {
+    color: #fff !important;
+    background: transparent !important;
+  }
+
+  .leaflet-popup-custom h2 {
+    color: #fff !important;
+  }
+
+  .leaflet-popup-custom p {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  .marker-cluster,
+  .marker-cluster div,
+  .leaflet-marker-icon {
+    transition-duration: 100ms !important;
+  }
+
+  .popup-divider {
+    width: 100%;
+    margin: 10px 0;
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
   }
 
   .popup-ig-link {
@@ -254,10 +284,8 @@ const chapters = [
     justify-content: center;
     width: 22px;
     height: 22px;
-    color: var(--accent, #ff3b30);
-    flex: 0 0 auto;
+    color: #ff3b30; !important
     transition: transform 150ms ease, opacity 150ms ease;
-    transform-origin: center;
   }
 
   .popup-ig-link svg {
@@ -272,33 +300,56 @@ const chapters = [
     transform: scale(1.15);
   }
 
-  .popup-divider {
-    width: 100%;
-    margin: 10px 0;
-    border: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.14);
+  .single-dot-wrap {
+    background: transparent;
+    border: none;
   }
 
-  .marker:hover .popup,
-  .dot[aria-expanded="true"] + .popup {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateX(-50%) translateY(0);
+  .single-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #e13434;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
   }
 
-  .marker:hover,
-  .marker:has(.dot[aria-expanded="true"]) {
-    z-index: 20;
+  .cluster-dot-wrap {
+    background: transparent;
+    border: none;
   }
 
-  .marker::after {
-    content: "";
+  .cluster-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #ff3b30;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+  }
+
+  .zoom-out-btn {
     position: absolute;
-    left: 50%;
-    bottom: 100%;
-    transform: translateX(-50%);
-    width: 220px;
-    height: 14px;
+    top: 12px;
+    left: 12px;
+    z-index: 1000;
+    background: rgba(10, 10, 10, 0.85);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 150ms ease;
+  }
+
+  .zoom-out-btn:hover {
+    background: rgba(255, 59, 48, 0.85);
   }
 
   .sr-only {
