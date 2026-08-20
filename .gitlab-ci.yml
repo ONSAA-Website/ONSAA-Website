@@ -73,6 +73,7 @@ mirror-github:
     - git config user.name "arpitdoesphoto"
     - git config user.email "arpitdoesphoto@gmail.com"
     - git checkout --orphan mirror-main
+    - rm -rf docs-internal
     - git add -A
     - git commit --author="shahi7 <69171919+shahi7@users.noreply.github.com>" -m "Sync from GitLab main @ ${CI_COMMIT_SHORT_SHA}"
     - git push --force "https://x-access-token:${GITHUB_MIRROR_PAT}@github.com/ONSAA-Website/ONSAA-Website.git" mirror-main:main
