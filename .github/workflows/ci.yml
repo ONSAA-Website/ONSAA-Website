@@ -1,0 +1,64 @@
+# Validation for the mirrored `draft` branch.
+#
+# This repo is a push mirror of gitlab.m.onsaa.org — nobody commits here, and
+# the draft -> main merge happens on GitLab via merge request. So this workflow
+# deliberately does NOT deploy. Its whole job is to answer "would the
+# production build succeed on GitHub's runner?" before that merge happens.
+#
+# GitLab Pages already previews what `draft` *looks like*. What it cannot prove
+# is that the GitHub deploy path works, because it builds for a subgroup base
+# path and a different origin. This builds exactly the way deploy.yml does —
+# same env, same commands — so a green run here means the only step left on
+# main is the upload.
+#
+# GitHub Pages publishes one site per repository, which is why there is no
+# preview deployment here: a second live site would need a second repo.
+name: CI
+
+on:
+  push:
+    branches: ["draft"]
+  # Never fires in the normal flow (merges happen on GitLab), but if a PR is
+  # ever opened here for review it should be checked too.
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+# Superseded runs on the same ref are cancelled — this publishes nothing, so
+# there is nothing to leave half-finished. (Contrast deploy.yml, which must not
+# cancel in progress.)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run check
+
+      # Same env as deploy.yml's build step, so this is a true dry run of
+      # production rather than a differently-configured build that happens to
+      # compile. Keep the two in sync.
+      - name: Build
+        run: npm run build
+        env:
+          # ASTRO_BASE: "/onsaa-site/"   # keep matching deploy.yml
+          ASTRO_SITE: "https://onsaa.org"

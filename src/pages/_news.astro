@@ -1,0 +1,77 @@
+---
+// No entries currently. 
+
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+
+const updates = (await getCollection("news", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+// timeZone UTC is load-bearing: a bare "2026-07-29" in frontmatter parses as
+// UTC midnight, which formats as the 28th in any timezone west of Greenwich.
+const dateFormat = new Intl.DateTimeFormat("en-CA", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
+});
+---
+
+<Layout
+  title="News and updates | ONSAA"
+  description="Latest news and campaign updates from ONSAA."
+  current="/news/"
+  contentMax="1040px"
+>
+  <section class="page-shell">
+    <div class="inner-shell">
+      <header class="page-header">
+        <h1>News and updates</h1>
+      </header>
+
+      <section class="news-list">
+        {
+          updates.map((update) => (
+            <article class="news-item">
+              <p class="news-meta">{dateFormat.format(update.data.date)}</p>
+              <h2>{update.data.title}</h2>
+              <p>{update.data.summary}</p>
+            </article>
+          ))
+        }
+        {
+          updates.length === 0 && (
+            <article class="news-item">
+              <p>No updates yet. Check back soon.</p>
+            </article>
+          )
+        }
+      </section>
+    </div>
+  </section>
+</Layout>
+
+<style is:global>
+  .news-list {
+    display: grid;
+    gap: 18px;
+  }
+
+  .news-meta {
+    margin: 0 0 10px;
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .news-item h2 {
+    margin: 0 0 10px;
+    color: #fff;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+</style>

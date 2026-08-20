@@ -1,0 +1,177 @@
+---
+import { Image, getImage } from "astro:assets";
+import Nav from "../components/Nav.astro";
+import SocialLinks from "../components/SocialLinks.astro";
+import { url } from "../lib/url";
+import logo from "../assets/logo.png";
+import background from "../assets/background.jpeg";
+// Declares the "Inter Variable" family that --font-sans leads with. Every
+// @font-face in here carries a unicode-range, so a browser only downloads the
+// latin subset it actually needs.
+import "@fontsource-variable/inter";
+import "../styles/main.css";
+import "../styles/shell.css";
+
+// The background is applied by CSS (`.page::before`, `.edge-blur`), and CSS
+// url() references bypass Astro's image pipeline entirely — the 2308x3570
+// original would ship untouched. getImage() runs the same sharp transform the
+// <Image> component uses, and the result is handed to CSS as a custom
+// property. 1920w is the widest the image is ever painted at, since
+// background-size: cover scales a portrait image to the viewport width.
+// layout: "none" is required here. The global default is "constrained", which
+// would emit a full srcset — but CSS url() can only reference one file, so
+// every extra variant would ship as a dead asset.
+const backgroundImage = await getImage({
+  src: background,
+  width: 1920,
+  format: "webp",
+  quality: 70,
+  layout: "none",
+});
+
+// PNG rather than webp: webp favicons work in current browsers but not in
+// older Safari, and the file is tiny either way.
+const favicon = await getImage({
+  src: logo,
+  width: 64,
+  format: "png",
+  layout: "none",
+});
+const appleTouchIcon = await getImage({
+  src: logo,
+  width: 180,
+  format: "png",
+  layout: "none",
+});
+
+// Social preview. 1200x630 is the size Facebook/LinkedIn/Slack crop to; fit
+// "cover" centre-crops the portrait source rather than letterboxing it.
+const ogImage = await getImage({
+  src: background,
+  width: 1200,
+  height: 630,
+  fit: "cover",
+  format: "jpeg",
+  quality: 78,
+  layout: "none",
+});
+
+interface Props {
+  title: string;
+  description: string;
+  /** Path of this page, for nav highlighting. e.g. "/about-us/" */
+  current: string;
+  /**
+   * hero  - full-bleed centred landing page (scrolls the body)
+   * inner - fixed frame with a scrolling content shell
+   * form  - like inner, but sized for an embedded form
+   */
+  variant?: "hero" | "inner" | "form";
+  /** Max width of .inner-shell. Was a per-page :root override. */
+  contentMax?: string;
+  /**
+   * Third-party origins this page fetches from (Stripe, Google Forms). Emitted
+   * as <link rel="preconnect"> so the TLS handshake overlaps with parsing
+   * instead of starting when the request is made. Cross-origin credentialed
+   * fetches (fonts, XHR) need their own connection, hence `crossorigin`.
+   */
+  preconnect?: string[];
+}
+
+const {
+  title,
+  description,
+  current,
+  variant = "inner",
+  contentMax = "980px",
+  preconnect = [],
+} = Astro.props;
+
+const pageClass =
+  variant === "hero" ? "page" : variant === "form" ? "page page-form" : "page page-inner";
+
+// The hero scrolls normally; inner/form pages lock the viewport and scroll
+// inside .page-shell. The old pages did this with `html, body { overflow:
+// hidden }` in each page's <style> block.
+// undefined rather than "" so the hero page doesn't emit a bare class="".
+const frameClass =
+  variant === "hero"
+    ? undefined
+    : variant === "form"
+      ? "page-form-body"
+      : "page-inner-body";
+
+// Open Graph requires absolute URLs — a bare "/_astro/…" is silently dropped by
+// every scraper. Astro.site is the deploy origin; resolving against Astro.url
+// keeps the canonical correct under a subpath deploy (ASTRO_BASE on GitLab).
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
+const ogImageUrl = new URL(ogImage.src, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" class={frameClass}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl.href} />
+
+    {
+      preconnect.map((origin) => (
+        <link rel="preconnect" href={origin} crossorigin />
+      ))
+    }
+
+    <link rel="icon" type="image/png" sizes="64x64" href={favicon.src} />
+    <link rel="apple-touch-icon" href={appleTouchIcon.src} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ONSAA" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl.href} />
+    <meta property="og:image" content={ogImageUrl.href} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Students at an ONSAA rally holding protest signs"
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl.href} />
+
+    <slot name="head" />
+  </head>
+  <body
+    class={frameClass}
+    style={`--content-max: ${contentMax}; --background-image: url("${backgroundImage.src}");`}
+  >
+    <main class={pageClass}>
+      <div class="edge-blur" aria-hidden="true"></div>
+      <div class="edge" aria-hidden="true"></div>
+
+      <Nav current={current} />
+
+      <a class="logo-frame" href={url("/")} aria-label="Go to home page">
+        {/* 795x790 source; painted at 140px, so 280w covers 2x displays. */}
+        <Image
+          class="logo"
+          src={logo}
+          width={280}
+          format="webp"
+          quality={80}
+          alt="ONSAA logo"
+          loading="eager"
+        />
+      </a>
+
+      <SocialLinks />
+
+      <slot />
+    </main>
+  </body>
+</html>
