@@ -61,7 +61,6 @@ mirror-github:
   # Then waits 15 minutes before syncing to GitHub. A human operator can
   # open the pipeline and either start it immediately or unschedule it
   # during that window; doing nothing lets it fire automatically at 15m.
-  start_in: 15 minutes
   image:
     name: alpine/git
     entrypoint: [""]
@@ -80,3 +79,4 @@ mirror-github:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: delayed
+      start_in: 15 minutes
