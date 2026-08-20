@@ -31,3 +31,22 @@ pages:
     publish: dist
   rules:
     - if: '$CI_COMMIT_BRANCH == "draft"'
+
+mirror-github:
+  stage: deploy
+  image:
+    name: alpine/git
+    entrypoint: [""]
+  variables:
+    GIT_STRATEGY: clone
+    GIT_DEPTH: 1
+  before_script: []
+  script:
+    - git config user.name "arpitdoesphoto"
+    - git config user.email "arpitdoesphoto@gmail.com"
+    - git checkout --orphan mirror-main
+    - git add -A
+    - git commit -m "Sync from GitLab main @ ${CI_COMMIT_SHORT_SHA}"
+    - git push --force "https://x-access-token:${GITHUB_MIRROR_PAT}@github.com/ONSAA-Website/ONSAA-Website.git" mirror-main:main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
