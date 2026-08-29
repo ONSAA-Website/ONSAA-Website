@@ -91,7 +91,7 @@ of what the original hand-written HTML assumed:
 | Directive | Astro's default | Why this repo overrides it |
 | --- | --- | --- |
 | `<style is:global>` | styles are *scoped* — Astro rewrites the selectors so they only match markup in that same file | page CSS targets markup the *layout* renders, so scoping would stop it matching |
-| `<script is:inline>` | scripts are bundled together and may be reordered or moved | Stripe's CDN script and the code using its `Stripe` global must stay put and run in order |
+| `<script is:inline>` | scripts are bundled together and may be reordered or moved | the countdown and signature tracker script reads `define:vars` values set at build time and must run inline, in place |
 
 **Assets** imported from `src/assets/` get hashed and rewritten with the
 correct base path. Anything in `public/` is copied verbatim instead.
@@ -153,7 +153,6 @@ src/
   styles/       main.css (global) + shell.css (inner-page shell)
   assets/       logo + background, hashed at build time
   lib/url.ts    builds internal links from BASE_URL
-server/         Express + Stripe donations API (separate deploy)
 ```
 
 ## Adding an article or news update
@@ -188,8 +187,3 @@ internal link goes through `src/lib/url.ts`, so only `ASTRO_BASE` changes:
 `.github/workflows/deploy.yml` publishes to GitHub Pages from `main`. If the
 GitHub deploy is a project site rather than a custom domain, uncomment
 `ASTRO_BASE` in that workflow.
-
-## Environment
-
-Copy `.env.example` to `.env`. Only `PUBLIC_*` values belong there — they are
-inlined into the client bundle. The Stripe *secret* key lives in `server/.env`.
