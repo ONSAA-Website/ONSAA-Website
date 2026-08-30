@@ -15,8 +15,9 @@ const institutions = [
       {
         code: "COMP 202",
         name: "Foundations of Programming",
-        amnesty_type: "Retake policy",
-        description: "Course may be repeated; highest grade counts toward program GPA."
+        exemption_type: "Retake policy",
+        description: "Course may be repeated; highest grade counts toward program GPA.",
+        info: "email"
       }
     ]
   },
@@ -26,14 +27,16 @@ const institutions = [
       {
         code: "CSC 101",
         name: "Introduction to Computer Science",
-        amnesty_type: "Grade forgiveness",
-        description: "Students may retake the course once; the second grade replaces the first in GPA calculations."
+        exemption_type: "Grade forgiveness",
+        description: "Students may retake the course once; the second grade replaces the first in GPA calculations.",
+        info: "quercus"
       },
       {
         code: "ECO 100",
         name: "Introductory Economics",
-        amnesty_type: "Academic renewal",
-        description: "After a 2-year break, prior poor performance can be excluded from GPA upon petition."
+        exemption_type: "Academic renewal",
+        description: "After a 2-year break, prior poor performance can be excluded from GPA upon petition.",
+        info: "quercus and email"
       }
     ]
   }
@@ -50,23 +53,23 @@ const allCourses = sortedInstitutions.flatMap(inst =>
     institution: inst.name,
     code: c.code,
     name: c.name,
-    amnesty_type: c.amnesty_type,
+    exemption_type: c.exemption_type,
     description: c.description
   }))
 );
 ---
 
 <Layout
-  title="Academic Amnesty Tracker | ONSAA"
-  description="Browse and submit academic amnesty policies by course."
-  current="/amnesty/"
+  title="Academic Exemption Database | ONSAA"
+  description="Browse and submit academic exemptions by course."
+  current="/exemption/"
   contentMax="900px"
 >
   <section class="page-shell">
     <div class="inner-shell">
-      <h1>Academic Amnesty Tracker</h1>
+      <h1>Academic Exemption Database</h1>
       <p class="intro">
-        Browse academic amnesty policies by institution and course, or submit one if you are a professor or TA.
+        Browse academic exemptions by institution and course, or submit one if you are a professor or TA.
       </p>
 
       <div class="tabs">
@@ -102,8 +105,9 @@ const allCourses = sortedInstitutions.flatMap(inst =>
                       .map(c => (
                         <div class="course-card">
                           <h3>{c.code} – {c.name}</h3>
-                          <p class="amnesty-type">{c.amnesty_type}</p>
+                          <p class="exemption-type">{c.exemption_type}</p>
                           <p class="description">{c.description}</p>
+                          <p class="info">Find your instructor's announcement: {c.info}</p>
                         </div>
                       ))
                     }
@@ -133,8 +137,8 @@ const allCourses = sortedInstitutions.flatMap(inst =>
         </div>
 
         <div id="submit-step" style="display:none;">
-          <h2>Submit academic amnesty</h2>
-          <form id="amnesty-form">
+          <h2>Submit academic exemption</h2>
+          <form id="exemption-form">
             <label for="institution">Institution</label>
             <div class="autocomplete-wrap">
               <input
@@ -145,6 +149,7 @@ const allCourses = sortedInstitutions.flatMap(inst =>
                 placeholder="Start typing your institution..."
                 autocomplete="off"
               />
+              <p id="institution-status" class="institution-status"></p>
               <div id="institution-results" class="autocomplete-results"></div>
             </div>
             <input type="hidden" id="institution-id" name="institution_id" required />
@@ -155,45 +160,43 @@ const allCourses = sortedInstitutions.flatMap(inst =>
             <label for="course_name">Course name</label>
             <input type="text" id="course_name" name="course_name" required />
 
-            <label for="amnesty_type">Amnesty type</label>
-            <select id="amnesty_type" name="amnesty_type" required>
+            <label for="exemption_type">Exemption type</label>
+            <select id="exemption_type" name="exemption_type" required>
               <option value="">Select a type</option>
-              <option value="Grade forgiveness">Grade forgiveness</option>
-              <option value="Academic renewal">Academic renewal</option>
-              <option value="Retake policy">Retake policy</option>
-              <option value="Course-specific amnesty">Course-specific amnesty</option>
+              <option value="Extend a deadline">Extend a deadline</option>
+              <option value="Online Asynchronous">Online synchronous class (ex. Zoom)</option>
+              <option value="Online Synchronous">Online asynchronous class (recording)</option>
+              <option value="Postpone an assessment">Postpone an assessment</option>
               <option value="Other">Other</option>
             </select>
 
-            <label for="description">Description</label>
+            <label for="description">Description of Exemption</label>
             <textarea id="description" name="description" required rows="4"></textarea>
 
-            <label for="submitter_name">Your name</label>
-            <input type="text" id="submitter_name" name="submitter_name" required />
+            <label for="submitter_name">Full name</label>
+            <input type="text" id="submitter_name" name="submitter_name" placeholder="John Doe" pattern="^[a-zA-Z]+(?:\s+[a-zA-Z]+)+$" required />
+            <p id="name-status" class="status"></p>
 
             <label for="submitter_email">Your institutional email</label>
             <input
               type="email"
               id="submitter_email"
               name="submitter_email"
-              required
-              placeholder="you@university.ca"
+              disabled
             />
 
-            <label for="proof_type">Proof type</label>
-            <select id="proof_type" name="proof_type" required>
-              <option value="">Select a type</option>
-              <option value="link">Link to official course page / faculty profile</option>
-              <option value="file">Upload syllabus or proof (Google Drive link)</option>
-            </select>
+            <label for="vow" class="checkbox-label">
+              <input type="checkbox" id="vow" name="vow" required>
+              I agree to commit to this academic exemption and make an announcement to notify my students.
+            </label>
 
-            <label for="proof_value">Proof value</label>
+            <label for="info">How will you notify students of this exemption?</label>
             <input
-              type="url"
-              id="proof_value"
-              name="proof_value"
+              type="text"
+              id="info"
+              name="info"
               required
-              placeholder="https://..."
+              placeholder="e.g. Canvas announcement, email, etc."
             />
 
             <button type="submit" class="button">Submit</button>
@@ -214,7 +217,7 @@ const allCourses = sortedInstitutions.flatMap(inst =>
       <div class="modal-body">
         <p class="modal-institution"></p>
         <h3 class="modal-code-name"></h3>
-        <p class="modal-amnesty-type"></p>
+        <p class="modal-exemption-type"></p>
         <p class="modal-description"></p>
       </div>
     </div>
@@ -234,7 +237,7 @@ const allCourses = sortedInstitutions.flatMap(inst =>
     const closeModalBtn = document.getElementById("close-modal");
     const modalInstitution = courseModal.querySelector(".modal-institution");
     const modalCodeName = courseModal.querySelector(".modal-code-name");
-    const modalAmnestyType = courseModal.querySelector(".modal-amnesty-type");
+    const modalExemptionType = courseModal.querySelector(".modal-exemption-type");
     const modalDescription = courseModal.querySelector(".modal-description");
 
     const verifyForm = document.getElementById("verify-form");
@@ -243,7 +246,7 @@ const allCourses = sortedInstitutions.flatMap(inst =>
 
     const submitStep = document.getElementById("submit-step");
     const verifyStep = document.getElementById("verify-step");
-    const amnestyForm = document.getElementById("amnesty-form");
+    const exemptionForm = document.getElementById("exemption-form");
     const submitStatus = document.getElementById("submit-status");
     const verifyButton = document.getElementById("verify-button");
 
@@ -336,8 +339,8 @@ const allCourses = sortedInstitutions.flatMap(inst =>
       }
 
       // Write to localStorage as signal
-      localStorage.setItem("amnesty_verified_email", email);
-      localStorage.setItem("amnesty_verified_token", token);
+      localStorage.setItem("exemption_verified_email", email);
+      localStorage.setItem("exemption_verified_token", token);
 
       // Clear URL
       if (window.history && window.history.replaceState) {
@@ -351,30 +354,6 @@ const allCourses = sortedInstitutions.flatMap(inst =>
         }
       }, 300);
     })();
-
-    // Listen for verification completion from another tab
-    window.addEventListener("storage", (e) => {
-      if (e.key === "amnesty_verified_email" && e.newValue) {
-        const email = e.newValue;
-
-        // Clear the flag so it only fires once
-        localStorage.removeItem("amnesty_verified_email");
-
-        // If user is on the Submit tab, show the form
-        const submitTabActive = document.querySelector(".tab-btn[data-tab='submit']")?.classList.contains("active");
-        if (!submitTabActive) {
-          return;
-        }
-
-        verifyStatus.textContent = "Email verified. You may now submit your claim.";
-        verifyStatus.className = "status success";
-        verifyStep.style.display = "none";
-        submitStep.style.display = "block";
-
-        // prefill email
-        verifyEmailInput.value = email;
-      }
-    });
 
     // Tabs: switch content, red underline on active
     tabBtns.forEach(btn => {
@@ -462,7 +441,7 @@ const allCourses = sortedInstitutions.flatMap(inst =>
 
       modalInstitution.textContent = course.institution;
       modalCodeName.textContent = `${course.code} – ${course.name}`;
-      modalAmnestyType.textContent = course.amnesty_type;
+      modalExemptionType.textContent = course.exemption_type;
       modalDescription.textContent = course.description;
 
       courseModal.style.display = "flex";
@@ -488,7 +467,7 @@ const allCourses = sortedInstitutions.flatMap(inst =>
       e.preventDefault();
       const email = verifyEmailInput.value.trim();
 
-      verifyStatus.textContent = "Sending verification email...";
+      verifyStatus.textContent = "Checking verification status...";
       verifyStatus.className = "status";
 
       try {
@@ -526,11 +505,27 @@ const allCourses = sortedInstitutions.flatMap(inst =>
     const institutionInput = document.getElementById("institution");
     const institutionResults = document.getElementById("institution-results");
     const institutionIdInput = document.getElementById("institution-id");
+    const institutionStatus = document.getElementById("institution-status");
+    const searchableInstitutions = sortedInstitutions.map(inst => ({
+      id: inst.name.toLowerCase().replace(/\s+/g, "-"),
+      name: inst.name
+    }));
+    const institutionalEmail = document.getElementById("submitter_email");
+
+    // track if a valid selection was made
+    let isValidSelection = false;
+
+    // pre-fill provided institutional email
+    institutionalEmail.placeholder = verifyEmailInput.value.trim();
 
     institutionInput.addEventListener("input", () => {
       const query = institutionInput.value.trim().toLowerCase();
       institutionResults.innerHTML = "";
       institutionResults.classList.remove("show");
+  
+      // Reset validity and ID while typing
+      isValidSelection = false;
+      institutionIdInput.value = ""; 
 
       if (!query) return;
 
@@ -544,9 +539,14 @@ const allCourses = sortedInstitutions.flatMap(inst =>
         const btn = document.createElement("button");
         btn.className = "autocomplete-item";
         btn.textContent = inst.name;
-        btn.addEventListener("click", () => {
+        
+        // Use mousedown instead of click to fire BEFORE the blur event
+        btn.addEventListener("mousedown", (e) => {
+          e.preventDefault(); // Prevents input from losing focus early
           institutionInput.value = inst.name;
           institutionIdInput.value = inst.id;
+          isValidSelection = true;
+          institutionResults.innerHTML = "";
           institutionResults.classList.remove("show");
         });
         institutionResults.appendChild(btn);
@@ -555,12 +555,118 @@ const allCourses = sortedInstitutions.flatMap(inst =>
       institutionResults.classList.add("show");
     });
 
-    // Close dropdown when clicking outside
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest(".autocomplete-wrap")) {
+    // Enforce the allowlist when the user clicks away (blur)
+    institutionInput.addEventListener("blur", () => {
+      // Hide results dropdown after a short delay
+      setTimeout(() => {
         institutionResults.classList.remove("show");
+      }, 200);
+
+    // Check if what they typed exactly matches something in your allowlist array
+    const exactMatch = searchableInstitutions.find(
+      inst => inst.name.toLowerCase() === institutionInput.value.trim().toLowerCase()
+    );
+
+    if (exactMatch) {
+      // If they typed it perfectly, lock it in
+      institutionInput.value = exactMatch.name;
+      institutionIdInput.value = exactMatch.id;
+      isValidSelection = true;
+      institutionStatus.textContent = "";
+    } else if (!isValidSelection) {
+      // If not valid, wipe the fields clean and show error message
+      institutionInput.value = "";
+      institutionIdInput.value = "";
+      institutionStatus.textContent = "ⓘ Please choose an institution from the list."
+    }
+  });
+
+  const nameInput = document.getElementById("submitter_name");
+  const nameStatus = document.getElementById("name-status"); // add a <p id="name-status"> under the name input
+
+  let isNameValid = false;
+
+  nameInput.addEventListener("input", () => {
+    const query = nameInput.value.trim();
+
+    // Basic full-name regex: letters, spaces, hyphens, apostrophes; at least two words
+    const fullNameRegex = /^[a-zA-Z'-]+(?:\s+[a-zA-Z'-]+)+$/;
+
+    if (!fullNameRegex.test(query)) {
+      isNameValid = false;
+      if (query.length > 0) {
+        nameStatus.textContent = "ⓘ Please enter your full name (first and last name).";
+        nameStatus.className = "status error";
+      } else {
+        nameStatus.textContent = "";
       }
-    });
+    } else {
+      isNameValid = true;
+      nameStatus.textContent = "";
+    }
+  });
+
+  nameInput.addEventListener("blur", () => {
+    const query = nameInput.value.trim();
+
+    if (!query) {
+      isNameValid = false;
+      nameStatus.textContent = "";
+      return;
+    }
+
+    const fullNameRegex = /^[a-zA-Z'-]+(?:\s+[a-zA-Z'-]+)+$/;
+
+    if (!fullNameRegex.test(query)) {
+      isNameValid = false;
+      nameInput.value = "";
+      nameStatus.textContent = "ⓘ Please enter your full name (first and last name).";
+      nameStatus.className = "status error";
+    } else {
+      isNameValid = true;
+      nameStatus.textContent = "";
+    }
+  });
+
+  // SUBMITTING AND UPDATING SPREADSHEET
+  exemptionForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(exemptionForm);
+    const payload = Object.fromEntries(formData.entries());
+
+    // convert checkbox to boolean
+    payload.vow = document.getElementById("vow").checked;
+
+    submitStatus.textContent = "Submitting...";
+    submitStatus.className = "status";
+
+    try {
+      const res = await fetch(APPS_SCRIPT_URL + "?action=submit-exemption", {
+        method: "POST",
+        headers: { "Content-Type": "application/json;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+
+      const json = await res.json();
+
+      if (json.error) {
+        submitStatus.textContent = json.error;
+        submitStatus.className = "status error";
+        return;
+      }
+
+      submitStatus.textContent = "Exemption submitted successfully.";
+      submitStatus.className = "status success";
+      exemptionForm.reset();
+      // Optionally hide submit-step or redirect
+    } catch (err) {
+      console.error("Submission failed:", err);
+      submitStatus.textContent = "Failed to submit exemption.";
+      submitStatus.className = "status error";
+    }
+  });
+
   </script>
 
   <style is:global>
@@ -766,19 +872,39 @@ const allCourses = sortedInstitutions.flatMap(inst =>
       padding: 14px;
     }
 
+    .institution-status {
+      font-weight: 500;
+      font-size: 0.85rem;
+      margin-top: 0px;
+      color: #ffffffec;
+    }
+
     .course-card h3 {
       margin: 0 0 6px;
       font-size: 1rem;
     }
 
-    .amnesty-type {
+    .exemption-type {
       font-size: 0.85rem;
       color: rgba(255, 59, 48, 0.9);
       margin-bottom: 6px;
     }
 
+    input[type="checkbox"] {
+      width: auto;
+      margin: 0 6px 0 0;
+      vertical-align: middle;
+    }
+
     .description {
       font-size: 0.9rem;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .info {
+      font-size: 1rem;
+      font-weight: 400;
       line-height: 1.5;
       color: rgba(255, 255, 255, 0.85);
     }
@@ -804,6 +930,29 @@ const allCourses = sortedInstitutions.flatMap(inst =>
       background: rgba(255, 255, 255, 0.06);
       color: #fff;
       font-size: 0.95rem;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      padding: 10px 12px;
+      margin-bottom: 20px;
+      margin-top: 14px;
+
+      border-left: 3px solid rgb(215, 9, 9);
+      background: rgba(255, 255, 255, 0.06);
+
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.95rem;
+
+      cursor: pointer;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: auto;
+      margin: 0;
     }
 
     textarea {
@@ -958,7 +1107,7 @@ const allCourses = sortedInstitutions.flatMap(inst =>
       margin: 0 0 8px;
     }
 
-    .modal-amnesty-type {
+    .modal-exemption-type {
       font-size: 0.85rem;
       color: rgba(255, 59, 48, 0.95);
       margin: 0 0 8px;

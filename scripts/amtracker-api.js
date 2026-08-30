@@ -1,4 +1,4 @@
-const SPREADSHEET_ID = "";
+const SPREADSHEET_ID = "1YNnDNz4w_Tu9DDZckf_jtRn-6e4aUKPd8WocnlW22o0";
 
 // allowlist of Canadian higher-ed domains + .edu
 const ALLOWED_DOMAINS = [
@@ -45,6 +45,9 @@ function doPost(e) {
   if (action === "request-verify") {
     return handleRequestVerify(e);
   }
+  else if (action === "submit-exemption") {
+    handleSubmitExemption(e);
+  }
   return jsonResp({ error: "Unknown action" }, 400);
 }
 
@@ -67,6 +70,54 @@ function doGet(e) {
   }
 
   return jsonResp({ status: "ok" });
+}
+
+function handleSubmitExemption(e) {
+  const lock = LockService.getScriptLock();
+  // one submission written at a time
+  lock.tryLock(10000);
+
+  try {
+    const params = JSON.parse(e.postData.contents);
+    const action = e.parameter.action;
+
+    if (action !== "submit-exemption") {
+      return jsonResponse({ error: "Unknown action" });
+    }
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("Submissions"); // or your sheet name
+
+    if (!sheet) {
+      return jsonResponse({ error: "Submissions sheet not found" });
+    }
+
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+    const row = {};
+    row.timestamp = new Date().toISOString();
+    row.institution = params.institution || "";
+    row.institution_id = params.institution_id || "";
+    row.course_code = params.course_code || "";
+    row.course_name = params.course_name || "";
+    row.exemption_type = params.exemption_type || "";
+    row.description = params.description || "";
+    row.submitter_name = params.submitter_name || "";
+    row.submitter_email = params.submitter_email || "";
+    row.vow = params.vow === true ? "TRUE" : "FALSE";
+    row.info = params.info || "";
+
+    const rowData = headers.map(h => row[h] ?? "");
+
+    sheet.appendRow(rowData);
+
+    return jsonResponse({ success: true });
+
+  } catch (err) {
+    return jsonResponse({ error: err.message || "Submission failed" });
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // helper: JSON response
