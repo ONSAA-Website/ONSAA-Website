@@ -57,6 +57,10 @@ function doGet(e) {
   const token = e.parameter.token;
   const email = e.parameter.email;
 
+  if (action === "list-exemptions") {
+    return handleListExemptions();
+  }
+
   if (action === "verify-email" && token) {
     return handleVerifyEmail(token);
   }
@@ -72,19 +76,42 @@ function doGet(e) {
   return jsonResp({ status: "ok" });
 }
 
+
+function handleListExemptions() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Submissions");
+  if (!sheet) {
+    return jsonResp({ error: "Submissions sheet not found" }, 500);
+  }
+
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) {
+    return jsonResp({ items: [] });
+  }
+
+  const headers = data[0];
+  const items = data.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => {
+      obj[h] = row[i];
+    });
+    return obj;
+  });
+
+  return jsonResp({ items });
+}
+
+
 function handleSubmitExemption(e) {
   const lock = LockService.getScriptLock();
   // one submission written at a time
   lock.tryLock(10000);
 
   try {
-    Logger.log("=== handleSubmitExemption called ===");
-    Logger.log("e.parameter:", e.parameter);
-    Logger.log("e.postData:", e.postData);
     const params = JSON.parse(e.postData.contents);
 
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName("Submissions"); // or your sheet name
+    const sheet = ss.getSheetByName("Submissions"); 
 
     if (!sheet) {
       return jsonResp({ error: "Submissions sheet not found" });
@@ -105,6 +132,12 @@ function handleSubmitExemption(e) {
     row.vow = params.vow === true ? "TRUE" : "FALSE";
     row.info = params.info || "";
 
+    // 5 submissions per hour per email
+    const limit = checkEmailRateLimit(params.submitter_email, 3600000, 5);
+    if (!limit.allowed) {
+      return jsonResp({ error: limit.error }, 429);
+    }
+
     const rowData = headers.map(h => row[h] ?? "");
 
     sheet.appendRow(rowData);
@@ -117,6 +150,72 @@ function handleSubmitExemption(e) {
     lock.releaseLock();
   }
 }
+
+function checkEmailRateLimit(email, windowMs, maxPerWindow) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let rlSheet = ss.getSheetByName("rateLimits");
+  if (!rlSheet) {
+    rlSheet = ss.insertSheet("rateLimits");
+    rlSheet.appendRow(["email", "count", "reset_at"]); // headers
+  }
+
+  const data = rlSheet.getDataRange().getValues();
+  const headers = data[0] || [];
+  const emailIndex = headers.indexOf("email");
+  const countIndex = headers.indexOf("count");
+  const resetIndex = headers.indexOf("reset_at");
+
+  const now = new Date();
+  let rowIdx = -1;
+
+  // find existing row for this email
+  for (let i = 1; i < data.length; i++) {
+    if ((data[i][emailIndex] || "").toLowerCase() === email.toLowerCase()) {
+      rowIdx = i + 1; // 1-based row number
+      break;
+    }
+  }
+
+  if (rowIdx === -1) {
+    // new email: start count at 1
+    rlSheet.appendRow([email, 1, new Date(now.getTime() + windowMs).toISOString()]);
+    return { allowed: true };
+  }
+
+  const count = data[rowIdx - 1][countIndex] || 0;
+  const resetAt = new Date(data[rowIdx - 1][resetIndex]);
+
+  if (now > resetAt) {
+    // window expired: reset
+    rlSheet.getRange(rowIdx, countIndex + 1).setValue(1);
+    rlSheet.getRange(rowIdx, resetIndex + 1).setValue(new Date(now.getTime() + windowMs).toISOString());
+    return { allowed: true };
+  }
+
+  if (count >= maxPerWindow) {
+    return { allowed: false, error: "Too many submissions from this email. Please try again later." };
+  }
+
+  // increment count
+  rlSheet.getRange(rowIdx, countIndex + 1).setValue(count + 1);
+  return { allowed: true };
+}
+
+/* helper: checking for duplicate submissions; UPDATE: valid dupicates are possible
+function duplicateRow(checkRow) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Submissions"); 
+
+  var lastRow = sheet.getLastRow();
+
+  // loop from the last row up to row 2; assuming duplicate submissions are more likely back to back
+  for (var i = lastRow; i >= 2; i--) {
+    var rowValues = sheet.getRange(i, 1, 1, sheet.getLastColumn()).getValues();
+    // each set of course : institution : exemption : email type must be unique 
+    if ((checkRow[0] === rowValues[0]) & (checkRow[1] === rowValues[1]) & (checkRow[3] === rowValues[3]))
+  }
+}
+*/
 
 // helper: JSON response
 function jsonResp(data, status = 200) {
