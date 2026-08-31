@@ -2,61 +2,11 @@
 import Layout from "../../layouts/Layout.astro";
 
 // TODO: stop spam verification link requests
+// TODO: prevent duplicates (email : course : exemption type)
 // TODO: check form html submission security (injections, etc)
 
 // proxy URL (worker)
 const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
-
-// fake data for visualization
-const institutions = [
-  {
-    name: "McGill University",
-    courses: [
-      {
-        code: "COMP 202",
-        name: "Foundations of Programming",
-        exemption_type: "Retake policy",
-        description: "Course may be repeated; highest grade counts toward program GPA.",
-        info: "email"
-      }
-    ]
-  },
-  {
-    name: "University of Toronto",
-    courses: [
-      {
-        code: "CSC 101",
-        name: "Introduction to Computer Science",
-        exemption_type: "Grade forgiveness",
-        description: "Students may retake the course once; the second grade replaces the first in GPA calculations.",
-        info: "quercus"
-      },
-      {
-        code: "ECO 100",
-        name: "Introductory Economics",
-        exemption_type: "Academic renewal",
-        description: "After a 2-year break, prior poor performance can be excluded from GPA upon petition.",
-        info: "quercus and email"
-      }
-    ]
-  }
-];
-
-// sort institutions A–Z by name
-const sortedInstitutions = [...institutions].sort((a, b) =>
-  a.name.localeCompare(b.name)
-);
-
-// flatten all courses with institution info for search
-const allCourses = sortedInstitutions.flatMap(inst =>
-  inst.courses.map(c => ({
-    institution: inst.name,
-    code: c.code,
-    name: c.name,
-    exemption_type: c.exemption_type,
-    description: c.description
-  }))
-);
 ---
 
 <Layout
@@ -87,36 +37,7 @@ const allCourses = sortedInstitutions.flatMap(inst =>
           <div id="search-results" class="search-results"></div>
         </div>
 
-        <div class="institutions-list" id="institutions-list">
-          {sortedInstitutions.map((inst, idx) => (
-            <div class="institution-block" data-index={idx}>
-              <button class="institution-header">
-                <span class="institution-name">{inst.name}</span>
-                <span class="chevron">▶</span>
-              </button>
-              <div class="institution-content">
-                {inst.courses.length === 0 ? (
-                  <p class="no-courses">No courses listed yet.</p>
-                ) : (
-                  <div class="courses-list">
-                    {inst.courses
-                      .slice()
-                      .sort((a, b) => (a.code || "").localeCompare(b.code || ""))
-                      .map(c => (
-                        <div class="course-card">
-                          <h3>{c.code} – {c.name}</h3>
-                          <p class="exemption-type">{c.exemption_type}</p>
-                          <p class="description">{c.description}</p>
-                          <p class="info">Find your instructor's announcement: {c.info}</p>
-                        </div>
-                      ))
-                    }
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <div class="institutions-list" id="institutions-list"></div>
       </div>
 
       <div id="tab-submit" class="tab-content">
@@ -182,7 +103,8 @@ const allCourses = sortedInstitutions.flatMap(inst =>
               type="email"
               id="submitter_email"
               name="submitter_email"
-              disabled
+              style="cursor: not allowed; pointer-events: none;"
+              readonly
             />
 
             <label for="vow" class="checkbox-label">
@@ -223,7 +145,9 @@ const allCourses = sortedInstitutions.flatMap(inst =>
     </div>
   </div>
 
-  <script define:vars={{ allCourses, sortedInstitutions, APPS_SCRIPT_URL }}>
+  <script define:vars={{ APPS_SCRIPT_URL }}>
+    let allCourses = [];
+    let sortedInstitutions = []; 
     const courseSearch = document.getElementById("course-search");
     const searchResults = document.getElementById("search-results");
     const institutionsList = document.getElementById("institutions-list");
@@ -253,8 +177,114 @@ const allCourses = sortedInstitutions.flatMap(inst =>
     const instData = sortedInstitutions;
     const coursesData = allCourses;
 
+    // load exemptions from spreadsheet
+    (async function loadExemptions() {
+      try {
+        const res = await fetch(APPS_SCRIPT_URL + "?action=list-exemptions");
+        const json = await res.json();
+        if (json.error) {
+          console.error("Failed to load exemptions:", json.error);
+          institutionsList.innerHTML = "<p>Could not load exemptions.</p>";
+          return;
+        }
+
+        const items = json.items || [];
+
+        // Group by institution
+        const byInst = new Map();
+        items.forEach(item => {
+          const instName = item.institution || "Unknown institution";
+          if (!byInst.has(instName)) {
+            byInst.set(instName, []);
+          }
+          byInst.get(instName).push(item);
+        });
+
+        // Build institutions array in same shape as your fake data
+        sortedInstitutions = Array.from(byInst.entries())
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([name, courses]) => ({
+            name,
+            courses: courses.map(c => ({
+              code: c.course_code || "",
+              name: c.course_name || "",
+              exemption_type: c.exemption_type || "",
+              description: c.description || "",
+              info: c.info || ""
+            }))
+          }));
+
+        // Flatten for search
+        allCourses = sortedInstitutions.flatMap(inst =>
+          inst.courses.map(c => ({
+            institution: inst.name,
+            code: c.code,
+            name: c.name,
+            exemption_type: c.exemption_type,
+            description: c.description
+          }))
+        );
+
+        // Render institutions list
+        renderInstitutions();
+      } catch (err) {
+        console.error("Error loading exemptions:", err);
+        institutionsList.innerHTML = "<p>Could not load exemptions.</p>";
+      }
+    })();
+
+    function renderInstitutions() {
+      institutionsList.innerHTML = "";
+
+      sortedInstitutions.forEach((inst, idx) => {
+        const block = document.createElement("div");
+        block.className = "institution-block";
+        block.dataset.index = idx;
+
+        const header = document.createElement("button");
+        header.className = "institution-header";
+        header.innerHTML = `
+          <span class="institution-name">${inst.name}</span>
+          <span class="chevron">▶</span>
+        `;
+
+        const content = document.createElement("div");
+        content.className = "institution-content";
+        content.style.display = "none";
+
+        if (inst.courses.length === 0) {
+          content.innerHTML = "<p class='no-courses'>No courses listed yet.</p>";
+        } else {
+          const list = document.createElement("div");
+          list.className = "courses-list";
+
+          inst.courses
+            .slice()
+            .sort((a, b) => (a.code || "").localeCompare(b.code || ""))
+            .forEach(c => {
+              const card = document.createElement("div");
+              card.className = "course-card";
+              card.innerHTML = `
+                <h3>${c.code} – ${c.name}</h3>
+                <p class="exemption-type">${c.exemption_type}</p>
+                <p class="description">${c.description}</p>
+                <p class="info">Find your instructor's announcement: ${c.info}</p>
+              `;
+              list.appendChild(card);
+            });
+
+          content.appendChild(list);
+        }
+
+        block.appendChild(header);
+        block.appendChild(content);
+        institutionsList.appendChild(block);
+      });
+    }
+
     // listen for verification messages from Apps Script
 
+    window.verifiedUserEmail = ""; // global email var
     // on page load, check for verification redirect params
     (async function handleVerificationRedirect() {
       const params = new URLSearchParams(window.location.search);
@@ -305,16 +335,15 @@ const allCourses = sortedInstitutions.flatMap(inst =>
           verifyStep.style.display = "none";
           submitStep.style.display = "block";
           verifyEmailInput.textContent = email;
+          window.verifiedUserEmail = email;
           verifyButton.click();
 
           // pre-fill and lock the email
-          document.addEventListener("DOMContentLoaded", () => {
-            const submitterEmailInput = document.getElementById("submitter_email");
-            if (submitterEmailInput) {
-              submitterEmailInput.value = email; // from verification
-              submitterEmailInput.placeholder = email;
-            }
-          });
+          const submitterEmailInput = document.getElementById("submitter_email");
+          if (submitterEmailInput) {
+            submitterEmailInput.value = window.verifiedUserEmail; // from verification
+            submitterEmailInput.placeholder = window.verifiedUserEmail;
+          }
   
         } else {
           verifyStatus.textContent = "Verification could not be confirmed. Please request a new verification email.";
@@ -635,6 +664,8 @@ const allCourses = sortedInstitutions.flatMap(inst =>
     const formData = new FormData(exemptionForm);
     const payload = Object.fromEntries(formData.entries());
 
+    // manually adding email bc it refuses to submit 
+    payload.submitter_email = window.verifiedUserEmail || verifyEmailInput.value.trim();
     // convert checkbox to boolean
     payload.vow = document.getElementById("vow").checked;
 
@@ -642,6 +673,7 @@ const allCourses = sortedInstitutions.flatMap(inst =>
     submitStatus.className = "status";
 
     try {
+      console.log("Submitting to:", APPS_SCRIPT_URL + "?action=submit-exemption");
       const res = await fetch(APPS_SCRIPT_URL + "?action=submit-exemption", {
         method: "POST",
         headers: { "Content-Type": "application/json;charset=utf-8" },
@@ -650,10 +682,14 @@ const allCourses = sortedInstitutions.flatMap(inst =>
 
       const json = await res.json();
 
+      console.log("Status:", res.status, res.ok);
+      console.log("Raw response text:", json);
+
       if (json.error) {
+        console.log(json.error);
         submitStatus.textContent = json.error;
         submitStatus.className = "status error";
-        return;
+        return json.error;
       }
 
       submitStatus.textContent = "Exemption submitted successfully.";

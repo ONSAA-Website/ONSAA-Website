@@ -45,8 +45,8 @@ function doPost(e) {
   if (action === "request-verify") {
     return handleRequestVerify(e);
   }
-  else if (action === "submit-exemption") {
-    handleSubmitExemption(e);
+  if (action === "submit-exemption") {
+    return handleSubmitExemption(e);
   }
   return jsonResp({ error: "Unknown action" }, 400);
 }
@@ -78,18 +78,16 @@ function handleSubmitExemption(e) {
   lock.tryLock(10000);
 
   try {
+    Logger.log("=== handleSubmitExemption called ===");
+    Logger.log("e.parameter:", e.parameter);
+    Logger.log("e.postData:", e.postData);
     const params = JSON.parse(e.postData.contents);
-    const action = e.parameter.action;
-
-    if (action !== "submit-exemption") {
-      return jsonResponse({ error: "Unknown action" });
-    }
 
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName("Submissions"); // or your sheet name
 
     if (!sheet) {
-      return jsonResponse({ error: "Submissions sheet not found" });
+      return jsonResp({ error: "Submissions sheet not found" });
     }
 
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -111,10 +109,10 @@ function handleSubmitExemption(e) {
 
     sheet.appendRow(rowData);
 
-    return jsonResponse({ success: true });
+    return jsonResp({ success: true });
 
   } catch (err) {
-    return jsonResponse({ error: err.message || "Submission failed" });
+    return jsonResp({ error: err.message || "Submission failed" });
   } finally {
     lock.releaseLock();
   }
@@ -194,7 +192,7 @@ function handleRequestVerify(e) {
 
 
     // proxy URL for verification + redirect (cloudflare worker)
-    const verifyUrl = "https://autumn-term-3542.chrollobrollo.workers.dev/amnesty/verify?token=" + encodeURIComponent(token) + "&email=" + encodeURIComponent(email);
+    const verifyUrl = "https://autumn-term-3542.chrollobrollo.workers.dev/exemption/verify?token=" + encodeURIComponent(token) + "&email=" + encodeURIComponent(email);
 
     GmailApp.sendEmail(
       email,
@@ -245,7 +243,7 @@ function handleVerifyEmail(token) {
     verifSheet.getRange(rowIndex, verifiedIdx + 1).setValue(true);
     const email = data[rowIndex - 1][emailIdx];
     
-    const redirectBase = "http://localhost:4321/amnesty";
+    const redirectBase = "http://localhost:4321/exemption";
     const redirectUrl =
       redirectBase +
       "?signal-verify=1&email=" +
