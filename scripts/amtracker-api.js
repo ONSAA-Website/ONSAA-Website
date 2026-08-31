@@ -254,9 +254,6 @@ function handleSubmitExemption(e) {
   lock.tryLock(10000);
 
   try {
-    Logger.log("=== handleSubmitExemption called ===");
-    Logger.log("e.parameter:", e.parameter);
-    Logger.log("e.postData:", e.postData);
     const params = JSON.parse(e.postData.contents);
 
     const email = String(params.submitter_email || "").toLowerCase().trim();
