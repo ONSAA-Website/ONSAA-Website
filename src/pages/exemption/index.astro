@@ -37,7 +37,13 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
           <div id="search-results" class="search-results"></div>
         </div>
 
-        <div class="institutions-list" id="institutions-list"></div>
+        <div class="institutions-list loading-state" id="institutions-list">
+          <div class="loading-overlay">
+            <div class="modern-spinner"></div>
+            <span class="loading-text"></span>
+          </div>
+        </div>
+
       </div>
 
       <div id="tab-submit" class="tab-content">
@@ -177,6 +183,7 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
     const instData = sortedInstitutions;
     const coursesData = allCourses;
 
+
     // load exemptions from spreadsheet
     (async function loadExemptions() {
       try {
@@ -200,7 +207,7 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
           byInst.get(instName).push(item);
         });
 
-        // Build institutions array in same shape as your fake data
+        // Build institutions array 
         sortedInstitutions = Array.from(byInst.entries())
           .sort((a, b) => a[0].localeCompare(b[0]))
           .map(([name, courses]) => ({
@@ -225,8 +232,12 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
           }))
         );
 
+        institutionsList.innerHTML = ''; 
+        institutionsList.classList.remove('loading-state');
+
         // Render institutions list
         renderInstitutions();
+
       } catch (err) {
         console.error("Error loading exemptions:", err);
         institutionsList.innerHTML = "<p>Could not load exemptions.</p>";
@@ -852,6 +863,24 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
       margin-bottom: 24px;
     }
 
+    .institutions-list.loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      gap: 12px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .loading-overlay {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
     .institution-block {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.14);
@@ -943,6 +972,40 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
       font-weight: 400;
       line-height: 1.5;
       color: rgba(255, 255, 255, 0.85);
+    }
+
+    .modern-spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid #e2e8f0;
+      border-top-color: #3b82f6; /* Modern Blue Accent */
+      border-radius: 50%;
+      animation: spin 0.8s infinite linear;
+    }
+
+    .loading-overlay {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .loading-text {
+      color: #64748b;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: -0.1px;
+      animation: pulse 2s infinite ease-in-out;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
     }
 
     .tab-content h2 {
