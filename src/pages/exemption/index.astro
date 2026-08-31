@@ -1,3 +1,4 @@
+```astro
 ---
 import Layout from "../../layouts/Layout.astro";
 
@@ -7,6 +8,20 @@ import Layout from "../../layouts/Layout.astro";
 
 // proxy URL (worker)
 const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
+
+const ALLOWED_INSTITUTIONS = [
+  "McGill University",
+  "University of Toronto",
+  "University of British Columbia",
+  "University of Waterloo",
+  "University of Alberta",
+  "Queen's University",
+  "Western University",
+  "Simon Fraser University",
+  "York University",
+  "Toronto Metropolitan University"
+  // TODO: add more
+];
 ---
 
 <Layout
@@ -151,9 +166,10 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
     </div>
   </div>
 
-  <script define:vars={{ APPS_SCRIPT_URL }}>
+  <script define:vars={{ APPS_SCRIPT_URL, ALLOWED_INSTITUTIONS }}>
     let allCourses = [];
     let sortedInstitutions = []; 
+    let searchableInstitutions = [];
     const courseSearch = document.getElementById("course-search");
     const searchResults = document.getElementById("search-results");
     const institutionsList = document.getElementById("institutions-list");
@@ -183,6 +199,11 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
     const instData = sortedInstitutions;
     const coursesData = allCourses;
 
+    // Build static allowlist for submit form
+    searchableInstitutions = ALLOWED_INSTITUTIONS.map(name => ({
+      id: name.toLowerCase().replace(/\s+/g, "-"),
+      name
+    }));
 
     // load exemptions from spreadsheet
     (async function loadExemptions() {
@@ -192,10 +213,17 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
         if (json.error) {
           console.error("Failed to load exemptions:", json.error);
           institutionsList.innerHTML = "<p>Could not load exemptions.</p>";
+          institutionsList.classList.remove("loading-state");
           return;
         }
 
         const items = json.items || [];
+
+        if (!items.length) {
+          institutionsList.innerHTML = "<p>No exemptions submitted yet.</p>";
+          institutionsList.classList.remove("loading-state");
+          return;
+        }
 
         // Group by institution
         const byInst = new Map();
@@ -241,6 +269,7 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
       } catch (err) {
         console.error("Error loading exemptions:", err);
         institutionsList.innerHTML = "<p>Could not load exemptions.</p>";
+        institutionsList.classList.remove("loading-state");
       }
     })();
 
@@ -542,28 +571,22 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
       }
     });
 
+    // Institution autocomplete (uses static ALLOWED_INSTITUTIONS)
     const institutionInput = document.getElementById("institution");
     const institutionResults = document.getElementById("institution-results");
     const institutionIdInput = document.getElementById("institution-id");
     const institutionStatus = document.getElementById("institution-status");
-    const searchableInstitutions = sortedInstitutions.map(inst => ({
-      id: inst.name.toLowerCase().replace(/\s+/g, "-"),
-      name: inst.name
-    }));
     const institutionalEmail = document.getElementById("submitter_email");
 
-    // track if a valid selection was made
     let isValidSelection = false;
 
-    // pre-fill provided institutional email
     institutionalEmail.placeholder = verifyEmailInput.value.trim();
 
     institutionInput.addEventListener("input", () => {
       const query = institutionInput.value.trim().toLowerCase();
       institutionResults.innerHTML = "";
       institutionResults.classList.remove("show");
-  
-      // Reset validity and ID while typing
+
       isValidSelection = false;
       institutionIdInput.value = ""; 
 
@@ -579,10 +602,9 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
         const btn = document.createElement("button");
         btn.className = "autocomplete-item";
         btn.textContent = inst.name;
-        
-        // Use mousedown instead of click to fire BEFORE the blur event
+
         btn.addEventListener("mousedown", (e) => {
-          e.preventDefault(); // Prevents input from losing focus early
+          e.preventDefault();
           institutionInput.value = inst.name;
           institutionIdInput.value = inst.id;
           isValidSelection = true;
@@ -595,124 +617,115 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
       institutionResults.classList.add("show");
     });
 
-    // Enforce the allowlist when the user clicks away (blur)
     institutionInput.addEventListener("blur", () => {
-      // Hide results dropdown after a short delay
       setTimeout(() => {
         institutionResults.classList.remove("show");
       }, 200);
 
-    // Check if what they typed exactly matches something in your allowlist array
-    const exactMatch = searchableInstitutions.find(
-      inst => inst.name.toLowerCase() === institutionInput.value.trim().toLowerCase()
-    );
+      const exactMatch = searchableInstitutions.find(
+        inst => inst.name.toLowerCase() === institutionInput.value.trim().toLowerCase()
+      );
 
-    if (exactMatch) {
-      // If they typed it perfectly, lock it in
-      institutionInput.value = exactMatch.name;
-      institutionIdInput.value = exactMatch.id;
-      isValidSelection = true;
-      institutionStatus.textContent = "";
-    } else if (!isValidSelection) {
-      // If not valid, wipe the fields clean and show error message
-      institutionInput.value = "";
-      institutionIdInput.value = "";
-      institutionStatus.textContent = "ⓘ Please choose an institution from the list."
-    }
-  });
+      if (exactMatch) {
+        institutionInput.value = exactMatch.name;
+        institutionIdInput.value = exactMatch.id;
+        isValidSelection = true;
+        institutionStatus.textContent = "";
+      } else if (!isValidSelection) {
+        institutionInput.value = "";
+        institutionIdInput.value = "";
+        institutionStatus.textContent = "ⓘ Please choose an institution from the list.";
+      }
+    });
 
-  const nameInput = document.getElementById("submitter_name");
-  const nameStatus = document.getElementById("name-status"); // add a <p id="name-status"> under the name input
+    const nameInput = document.getElementById("submitter_name");
+    const nameStatus = document.getElementById("name-status");
 
-  let isNameValid = false;
+    let isNameValid = false;
 
-  nameInput.addEventListener("input", () => {
-    const query = nameInput.value.trim();
+    nameInput.addEventListener("input", () => {
+      const query = nameInput.value.trim();
 
-    // Basic full-name regex: letters, spaces, hyphens, apostrophes; at least two words
-    const fullNameRegex = /^[a-zA-Z'-]+(?:\s+[a-zA-Z'-]+)+$/;
+      const fullNameRegex = /^[a-zA-Z'-]+(?:\s+[a-zA-Z'-]+)+$/;
 
-    if (!fullNameRegex.test(query)) {
-      isNameValid = false;
-      if (query.length > 0) {
+      if (!fullNameRegex.test(query)) {
+        isNameValid = false;
+        if (query.length > 0) {
+          nameStatus.textContent = "ⓘ Please enter your full name (first and last name).";
+          nameStatus.className = "status error";
+        } else {
+          nameStatus.textContent = "";
+        }
+      } else {
+        isNameValid = true;
+        nameStatus.textContent = "";
+      }
+    });
+
+    nameInput.addEventListener("blur", () => {
+      const query = nameInput.value.trim();
+
+      if (!query) {
+        isNameValid = false;
+        nameStatus.textContent = "";
+        return;
+      }
+
+      const fullNameRegex = /^[a-zA-Z'-]+(?:\s+[a-zA-Z'-]+)+$/;
+
+      if (!fullNameRegex.test(query)) {
+        isNameValid = false;
+        nameInput.value = "";
         nameStatus.textContent = "ⓘ Please enter your full name (first and last name).";
         nameStatus.className = "status error";
       } else {
+        isNameValid = true;
         nameStatus.textContent = "";
       }
-    } else {
-      isNameValid = true;
-      nameStatus.textContent = "";
-    }
-  });
+    });
 
-  nameInput.addEventListener("blur", () => {
-    const query = nameInput.value.trim();
+    // SUBMITTING AND UPDATING SPREADSHEET
+    exemptionForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-    if (!query) {
-      isNameValid = false;
-      nameStatus.textContent = "";
-      return;
-    }
+      const formData = new FormData(exemptionForm);
+      const payload = Object.fromEntries(formData.entries());
 
-    const fullNameRegex = /^[a-zA-Z'-]+(?:\s+[a-zA-Z'-]+)+$/;
+      payload.submitter_email = window.verifiedUserEmail || verifyEmailInput.value.trim();
+      payload.vow = document.getElementById("vow").checked;
 
-    if (!fullNameRegex.test(query)) {
-      isNameValid = false;
-      nameInput.value = "";
-      nameStatus.textContent = "ⓘ Please enter your full name (first and last name).";
-      nameStatus.className = "status error";
-    } else {
-      isNameValid = true;
-      nameStatus.textContent = "";
-    }
-  });
+      submitStatus.textContent = "Submitting...";
+      submitStatus.className = "status";
 
-  // SUBMITTING AND UPDATING SPREADSHEET
-  exemptionForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+      try {
+        console.log("Submitting to:", APPS_SCRIPT_URL + "?action=submit-exemption");
+        const res = await fetch(APPS_SCRIPT_URL + "?action=submit-exemption", {
+          method: "POST",
+          headers: { "Content-Type": "application/json;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
 
-    const formData = new FormData(exemptionForm);
-    const payload = Object.fromEntries(formData.entries());
+        const json = await res.json();
 
-    // manually adding email bc it refuses to submit 
-    payload.submitter_email = window.verifiedUserEmail || verifyEmailInput.value.trim();
-    // convert checkbox to boolean
-    payload.vow = document.getElementById("vow").checked;
+        console.log("Status:", res.status, res.ok);
+        console.log("Raw response text:", json);
 
-    submitStatus.textContent = "Submitting...";
-    submitStatus.className = "status";
+        if (json.error) {
+          console.log(json.error);
+          submitStatus.textContent = json.error;
+          submitStatus.className = "status error";
+          return;
+        }
 
-    try {
-      console.log("Submitting to:", APPS_SCRIPT_URL + "?action=submit-exemption");
-      const res = await fetch(APPS_SCRIPT_URL + "?action=submit-exemption", {
-        method: "POST",
-        headers: { "Content-Type": "application/json;charset=utf-8" },
-        body: JSON.stringify(payload)
-      });
-
-      const json = await res.json();
-
-      console.log("Status:", res.status, res.ok);
-      console.log("Raw response text:", json);
-
-      if (json.error) {
-        console.log(json.error);
-        submitStatus.textContent = json.error;
+        submitStatus.textContent = "Exemption submitted successfully.";
+        submitStatus.className = "status success";
+        exemptionForm.reset();
+      } catch (err) {
+        console.error("Submission failed:", err);
+        submitStatus.textContent = "Failed to submit exemption.";
         submitStatus.className = "status error";
-        return json.error;
       }
-
-      submitStatus.textContent = "Exemption submitted successfully.";
-      submitStatus.className = "status success";
-      exemptionForm.reset();
-      // Optionally hide submit-step or redirect
-    } catch (err) {
-      console.error("Submission failed:", err);
-      submitStatus.textContent = "Failed to submit exemption.";
-      submitStatus.className = "status error";
-    }
-  });
+    });
 
   </script>
 
@@ -736,7 +749,6 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
       color: rgba(255, 255, 255, 0.85);
     }
 
-    /* Tabs: side-by-side, clear bg, white text, red underline on active */
     .tabs {
       display: flex;
       gap: 18px;
@@ -978,7 +990,7 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
       width: 28px;
       height: 28px;
       border: 3px solid #e2e8f0;
-      border-top-color: #3b82f6; /* Modern Blue Accent */
+      border-top-color: #3b82f6;
       border-radius: 50%;
       animation: spin 0.8s infinite linear;
     }
@@ -1134,7 +1146,6 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
       margin-bottom: 14px;
     }
 
-    /* Modal */
     .modal {
       position: fixed;
       inset: 0;
@@ -1219,3 +1230,4 @@ const APPS_SCRIPT_URL = "https://autumn-term-3542.chrollobrollo.workers.dev/";
     }
   </style>
 </Layout>
+```
