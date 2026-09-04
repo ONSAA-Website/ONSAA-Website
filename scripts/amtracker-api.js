@@ -45,6 +45,7 @@ function doPost(e) {
   if (action === "request-verify") {
     return handleRequestVerify(e);
   }
+  
   if (action === "submit-exemption") {
     return handleSubmitExemption(e);
   }

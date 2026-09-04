@@ -120,6 +120,7 @@ const ALLOWED_INSTITUTIONS = [
             <input type="text" id="submitter_name" name="submitter_name" placeholder="John Doe" pattern="^[a-zA-Z]+(?:\s+[a-zA-Z]+)+$" required />
             <p id="name-status" class="status"></p>
 
+            <div style="display:none;">
             <label for="submitter_email">Your institutional email</label>
             <input
               type="email"
@@ -127,7 +128,9 @@ const ALLOWED_INSTITUTIONS = [
               name="submitter_email"
               style="cursor: not allowed; pointer-events: none;"
               readonly
+              style="display:none;"
             />
+            </div>
 
             <label for="vow" class="checkbox-label">
               <input type="checkbox" id="vow" name="vow" required>
@@ -192,12 +195,17 @@ const ALLOWED_INSTITUTIONS = [
               <option value="Other">Other</option>
             </select>
 
-            <label for="instructor_contact">Please provide the relevant instructor's email:</label>
-            <input id="instructor_contact" name="instructor_contact" type="text" style="display:none;"/>
+            <div id="instructor-contact" style="display:none;">
+              <label for="instructor_contact">Please provide the relevant instructor's email:</label>
+              <input id="instructor_contact" name="instructor_contact" type="text"/>
+            </div>
 
-            <label for="other_explanation">Please specify why you believe this submission to be incorrect:</label>
-            <input id="other_explanation" name="other_explanation" type="text" style="display:none;"/>
+            <div id="other-explanation" style="display:none;">
+              <label for="other_explanation">Please specify why you believe this submission to be incorrect:</label>
+              <input id="other_explanation" name="other_explanation" type="text" style="display:none;"/>
+            </div>
 
+            <div style="display:none;">
             <label for="reporter_email">Your institutional email</label>
             <input
               type="email"
@@ -206,8 +214,9 @@ const ALLOWED_INSTITUTIONS = [
               style="cursor: not-allowed; pointer-events: none;"
               readonly
             />
+            </div>
 
-            <button type="submit" class="button">Submit report</button>
+            <button type="submit" class="button">Submit</button>
           </form>
           <p id="report-status" class="status"></p>
         </div>
@@ -242,6 +251,7 @@ const ALLOWED_INSTITUTIONS = [
     const tabBtns = document.querySelectorAll(".tab-btn");
     const tabBrowse = document.getElementById("tab-browse");
     const tabSubmit = document.getElementById("tab-submit");
+    const tabReport = document.getElementById("tab-report");
 
     const courseModal = document.getElementById("course-modal");
     const modalBackdrop = courseModal.querySelector(".modal-backdrop");
@@ -264,9 +274,6 @@ const ALLOWED_INSTITUTIONS = [
     const instData = sortedInstitutions;
     const coursesData = allCourses;
 
-    reportForm = document.getElementById("report-form");
-    reasonSelect = document.getElementById("reason_select");
-
     const reportVerifyForm = document.getElementById("report-verify-form");
     const reportVerifyEmailInput = document.getElementById("report-verify-email");
     const reportVerifyStatus = document.getElementById("report-verify-status");
@@ -277,6 +284,7 @@ const ALLOWED_INSTITUTIONS = [
     const reportForm = document.getElementById("report-form");
     const reportStatus = document.getElementById("report-status");
     const reporterEmailInput = document.getElementById("reporter_email");
+    const reasonSelect = document.getElementById("reason_select");
 
     // Build static allowlist for submit form
     searchableInstitutions = ALLOWED_INSTITUTIONS.map(name => ({
@@ -410,73 +418,76 @@ const ALLOWED_INSTITUTIONS = [
       const verifiedFlag = params.get("verified");
       const token = params.get("token");
       const email = params.get("email");
+      const scope = params.get("scope") || "submit"; // ← add this
 
       if (verifiedFlag !== "1" || !token) {
-        return; // No valid verification redirect
+        return;
       }
-
-      // clear the query string
-      if (window.history && window.history.replaceState) {
-        const cleanUrl = window.location.pathname + window.location.hash;
-        window.history.replaceState({}, "", cleanUrl);
-      }
-
-      // Force Submit tab to be active
-      tabBtns.forEach(b => b.classList.remove("active"));
-      const submitTabBtn = document.querySelector(".tab-btn[data-tab='submit']");
-      if (submitTabBtn) {
-        submitTabBtn.classList.add("active");
-      }
-
-      tabBrowse.classList.remove("active");
-      tabSubmit.classList.add("active");
-
-      // Show verifying state
-      verifyStep.style.display = "block";
-
-      // disable button
-      verifyButton.style.display = "none";
-
-      submitStep.style.display = "none";
-      verifyStatus.textContent = "Confirming verification…";
-      verifyStatus.className = "status";
 
       try {
-        // Call check-token with token only
         const res = await fetch(
-          APPS_SCRIPT_URL + "?action=check-token&token=" + encodeURIComponent(token) + "&email=" + encodeURIComponent(email)
+          APPS_SCRIPT_URL +
+            "?action=check-token&token=" +
+            encodeURIComponent(token) +
+            "&email=" +
+            encodeURIComponent(email)
         );
         const json = await res.json();
 
         if (json.verified) {
+          window.verifiedUserEmail = email;
+
+          const isReportVerification = scope === "report";
+
+          if (isReportVerification) {
+            // Activate Report tab
+            tabBtns.forEach((button) => {
+              button.classList.toggle(
+                "active",
+                button.dataset.tab === "report"
+              );
+            });
+
+            tabBrowse.classList.remove("active");
+            tabSubmit.classList.remove("active");
+            tabReport.classList.add("active");
+
+            reportVerifyStep.style.display = "none";
+            reportSubmitStep.style.display = "block";
+
+            const reporterEmailInput = document.getElementById("reporter_email");
+            if (reporterEmailInput) {
+              reporterEmailInput.value = email;
+              reporterEmailInput.placeholder = email;
+            }
+          } else {
+            // Activate Submit tab (default)
+            tabBtns.forEach((button) => {
+              button.classList.toggle(
+                "active",
+                button.dataset.tab === "submit"
+              );
+            });
+
+            tabBrowse.classList.remove("active");
+            tabSubmit.classList.add("active");
+            tabReport.classList.remove("active");
+
+            verifyStep.style.display = "none";
+            submitStep.style.display = "block";
+
+            const submitterEmailInput = document.getElementById("submitter_email");
+            if (submitterEmailInput) {
+              submitterEmailInput.value = email;
+              submitterEmailInput.placeholder = email;
+            }
+          }
+
           verifyStatus.textContent = "Email verified. You may now submit your claim.";
           verifyStatus.className = "status success";
-          verifyStep.style.display = "none";
-          submitStep.style.display = "block";
-          verifyEmailInput.textContent = email;
-          window.verifiedUserEmail = email;
-          verifyButton.click();
-
-          const submitterEmailInput = document.getElementById("submitter_email");
-          if (submitterEmailInput) {
-            submitterEmailInput.value = window.verifiedUserEmail;
-            submitterEmailInput.placeholder = window.verifiedUserEmail;
-          }
-          const reporterEmailInput = document.getElementById("reporter_email");
-          if (reporterEmailInput) {
-            reporterEmailInput.value = window.verifiedUserEmail;
-            reporterEmailInput.placeholder = window.verifiedUserEmail;
-          }
-
-          // pre-fill and lock the email
-          const submitterEmailInput = document.getElementById("submitter_email");
-          if (submitterEmailInput) {
-            submitterEmailInput.value = window.verifiedUserEmail; // from verification
-            submitterEmailInput.placeholder = window.verifiedUserEmail;
-          }
-  
         } else {
-          verifyStatus.textContent = "Verification could not be confirmed. Please request a new verification email.";
+          verifyStatus.textContent =
+            "Verification could not be confirmed. Please request a new verification email.";
           verifyStatus.className = "status error";
         }
       } catch (err) {
@@ -515,19 +526,17 @@ const ALLOWED_INSTITUTIONS = [
     })();
 
     // Tabs: switch content, red underline on active
-    tabBtns.forEach(btn => {
-      btn.addEventListener("click", () => {
-        tabBtns.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
+    tabBtns.forEach((button) => {
+      button.addEventListener("click", () => {
+        const tabName = button.dataset.tab;
 
-        const tabName = btn.dataset.tab;
-        if (tabName === "browse") {
-          tabBrowse.classList.add("active");
-          tabSubmit.classList.remove("active");
-        } else {
-          tabSubmit.classList.add("active");
-          tabBrowse.classList.remove("active");
-        }
+        tabBtns.forEach((btn) => {
+          btn.classList.toggle("active", btn === button);
+        });
+
+        tabBrowse.classList.toggle("active", tabName === "browse");
+        tabSubmit.classList.toggle("active", tabName === "submit");
+        tabReport.classList.toggle("active", tabName === "report");
       });
     });
 
@@ -623,10 +632,10 @@ const ALLOWED_INSTITUTIONS = [
 
     reasonSelect.addEventListener("change", async (e) => {
       if (e.target.value == "Contacted Instructor" || e.target.value == "Is Instructor") {
-        document.getElementById("instructor_contact").style.display = "";
+        document.getElementById("instructor-contact").style.display = "";
       }
       if (e.target.value == "Other") {
-        document.getElementById("other_explanation").style.display = "";
+        document.getElementById("other-explanation").style.display = "";
       }
     });
 
@@ -685,7 +694,10 @@ const ALLOWED_INSTITUTIONS = [
         const res = await fetch(APPS_SCRIPT_URL + "?action=request-verify", {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({
+            email,
+            scope: "submit",
+          })
         });
 
         const json = await res.json();
@@ -725,7 +737,10 @@ const ALLOWED_INSTITUTIONS = [
         const res = await fetch(APPS_SCRIPT_URL + "?action=request-verify", {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({
+            email,
+            scope: "report",
+          })
         });
 
         const json = await res.json();

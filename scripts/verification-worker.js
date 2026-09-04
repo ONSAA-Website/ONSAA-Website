@@ -1,7 +1,5 @@
-// cloudflare worker script for email verification links
-
-const APPS_SCRIPT_URL = "";
-const APP_ORIGIN = "";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzER3j3__BhPZPQXMEVcipD58Gay-jOa0ET5Evb5tDQs9XCxnciV4eS0N3_X6ScnTfPhQ/exec";
+const APP_ORIGIN = "http://localhost:4321"; 
 
 export default {
   async fetch(request) {
@@ -18,7 +16,7 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    if (path === "/amnesty/verify") {
+    if (path === "/exemption/verify") {
       const token = url.searchParams.get("token");
       const email = url.searchParams.get("email");
       if (!token || !email) {
@@ -28,7 +26,7 @@ export default {
       const verifyUrl = APPS_SCRIPT_URL + "?action=verify-email&token=" + encodeURIComponent(token);
       await fetch(verifyUrl);
 
-      const redirectUrl = APP_ORIGIN + "/amnesty?verified=1&token=" + encodeURIComponent(token) + "&email=" + encodeURIComponent(email);
+      const redirectUrl = APP_ORIGIN + "/exemption?verified=1&token=" + encodeURIComponent(token) + "&email=" + encodeURIComponent(email) + "&scope=" + encodeURIComponent(scope);
 
       return new Response(`
         <!DOCTYPE html>
