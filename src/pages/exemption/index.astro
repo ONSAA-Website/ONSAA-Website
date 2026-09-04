@@ -40,6 +40,7 @@ const ALLOWED_INSTITUTIONS = [
       <div class="tabs">
         <button class="tab-btn active" data-tab="browse">Browse</button>
         <button class="tab-btn" data-tab="submit">Submit</button>
+        <button class="tab-btn" data-tab="report">Report Incorrect Submissions</button>
       </div>
 
       <div id="tab-browse" class="tab-content active">
@@ -147,6 +148,70 @@ const ALLOWED_INSTITUTIONS = [
           <p id="submit-status" class="status"></p>
         </div>
       </div>
+
+      <div id="tab-report" class="tab-content">
+        <div id="report-verify-step">
+          <h2>Verify your institutional email</h2>
+          <form id="report-verify-form">
+            <label for="report-verify-email">Institutional email</label>
+            <input
+              type="email"
+              id="report-verify-email"
+              name="email"
+              required
+              placeholder="you@university.ca"
+            />
+            <button id="report-verify-button" type="submit" class="button">Verify email</button>
+          </form>
+          <p id="report-verify-status" class="status"></p>
+        </div>
+
+        <div id="report-submit-step" style="display:none;">
+          <h1>Report incorrect or false exemptions</h1>
+          <p class="intro">
+            Only students and instructors with a verified institutional email can submit reports.
+          </p>
+
+          <form id="report-form">
+            <label for="report-course_name">Course Name</label>
+            <div class="search-wrap">
+              <input
+                type="text"
+                id="report-course_name"
+                required
+                placeholder="Search exemption by course code (e.g. CSC, ECO)..."
+              />
+              <div id="report-search-results" class="search-results"></div>
+            </div>
+
+            <label for="reason_select">Why do you believe this submission to be incorrect?</label>
+            <select id="reason_select" name="reason_select" required>
+              <option value="No Verification">An announcement/email about this exemption has not been made by an instructor.</option>
+              <option value="Contacted Instructor">I contacted an instructor about the submission.</option>
+              <option value="Is Instructor">I am an instructor for this course/section and believe this to be an incorrect submission.</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <label for="instructor_contact">Please provide the relevant instructor's email:</label>
+            <input id="instructor_contact" name="instructor_contact" type="text" style="display:none;"/>
+
+            <label for="other_explanation">Please specify why you believe this submission to be incorrect:</label>
+            <input id="other_explanation" name="other_explanation" type="text" style="display:none;"/>
+
+            <label for="reporter_email">Your institutional email</label>
+            <input
+              type="email"
+              id="reporter_email"
+              name="reporter_email"
+              style="cursor: not-allowed; pointer-events: none;"
+              readonly
+            />
+
+            <button type="submit" class="button">Submit report</button>
+          </form>
+          <p id="report-status" class="status"></p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -198,6 +263,20 @@ const ALLOWED_INSTITUTIONS = [
 
     const instData = sortedInstitutions;
     const coursesData = allCourses;
+
+    reportForm = document.getElementById("report-form");
+    reasonSelect = document.getElementById("reason_select");
+
+    const reportVerifyForm = document.getElementById("report-verify-form");
+    const reportVerifyEmailInput = document.getElementById("report-verify-email");
+    const reportVerifyStatus = document.getElementById("report-verify-status");
+    const reportVerifyButton = document.getElementById("report-verify-button");
+
+    const reportSubmitStep = document.getElementById("report-submit-step");
+    const reportVerifyStep = document.getElementById("report-verify-step");
+    const reportForm = document.getElementById("report-form");
+    const reportStatus = document.getElementById("report-status");
+    const reporterEmailInput = document.getElementById("reporter_email");
 
     // Build static allowlist for submit form
     searchableInstitutions = ALLOWED_INSTITUTIONS.map(name => ({
@@ -378,6 +457,17 @@ const ALLOWED_INSTITUTIONS = [
           window.verifiedUserEmail = email;
           verifyButton.click();
 
+          const submitterEmailInput = document.getElementById("submitter_email");
+          if (submitterEmailInput) {
+            submitterEmailInput.value = window.verifiedUserEmail;
+            submitterEmailInput.placeholder = window.verifiedUserEmail;
+          }
+          const reporterEmailInput = document.getElementById("reporter_email");
+          if (reporterEmailInput) {
+            reporterEmailInput.value = window.verifiedUserEmail;
+            reporterEmailInput.placeholder = window.verifiedUserEmail;
+          }
+
           // pre-fill and lock the email
           const submitterEmailInput = document.getElementById("submitter_email");
           if (submitterEmailInput) {
@@ -531,6 +621,58 @@ const ALLOWED_INSTITUTIONS = [
       }
     });
 
+    reasonSelect.addEventListener("change", async (e) => {
+      if (e.target.value == "Contacted Instructor" || e.target.value == "Is Instructor") {
+        document.getElementById("instructor_contact").style.display = "";
+      }
+      if (e.target.value == "Other") {
+        document.getElementById("other_explanation").style.display = "";
+      }
+    });
+
+    // report submit
+    reportForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      if (!window.verifiedUserEmail) {
+        reportStatus.textContent = "You must verify your institutional email before submitting a report.";
+        reportStatus.className = "status error";
+        return;
+      }
+
+      const formData = new FormData(reportForm);
+      const payload = Object.fromEntries(formData.entries());
+
+      payload.reporter_email = window.verifiedUserEmail;
+
+      reportStatus.textContent = "Submitting report...";
+      reportStatus.className = "status";
+
+      try {
+        const res = await fetch(APPS_SCRIPT_URL + "?action=report-submission", {
+          method: "POST",
+          headers: { "Content-Type": "application/json;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+
+        const json = await res.json();
+
+        if (json.error) {
+          reportStatus.textContent = json.error;
+          reportStatus.className = "status error";
+          return;
+        }
+
+        reportStatus.textContent = "Report submitted successfully.";
+        reportStatus.className = "status success";
+        reportForm.reset();
+      } catch (err) {
+        console.error("Report submission failed:", err);
+        reportStatus.textContent = "Failed to submit report.";
+        reportStatus.className = "status error";
+      }
+    });
+
     // email verification
     verifyForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -568,6 +710,53 @@ const ALLOWED_INSTITUTIONS = [
         console.error(err);
         verifyStatus.textContent = "Failed to send verification email.";
         verifyStatus.className = "status error";
+      }
+    });
+
+    // report tab: email verification 
+    reportVerifyForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = reportVerifyEmailInput.value.trim();
+
+      reportVerifyStatus.textContent = "Checking verification status...";
+      reportVerifyStatus.className = "status";
+
+      try {
+        const res = await fetch(APPS_SCRIPT_URL + "?action=request-verify", {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ email })
+        });
+
+        const json = await res.json();
+
+        if (json.error) {
+          reportVerifyStatus.textContent = json.error;
+          reportVerifyStatus.className = "status error";
+          return;
+        }
+
+        if (json.alreadyVerified) {
+          reportVerifyStatus.textContent = "Your email is already verified. You may proceed to submit a report.";
+          reportVerifyStatus.className = "status success";
+          reportVerifyStep.style.display = "none";
+          reportSubmitStep.style.display = "block";
+
+          // Set global verified email if not set yet
+          if (!window.verifiedUserEmail) {
+            window.verifiedUserEmail = email;
+          }
+          reporterEmailInput.value = window.verifiedUserEmail;
+          reporterEmailInput.placeholder = window.verifiedUserEmail;
+          return;
+        }
+
+        reportVerifyStatus.textContent = "Verification email sent. Please check your inbox and click the link.\nIf you don't see the email, wait a few minutes and check your junk/spam folder before making another request.";
+        reportVerifyStatus.className = "status success";
+      } catch (err) {
+        console.error(err);
+        reportVerifyStatus.textContent = "Failed to send verification email.";
+        reportVerifyStatus.className = "status error";
       }
     });
 
@@ -730,6 +919,40 @@ const ALLOWED_INSTITUTIONS = [
   </script>
 
   <style is:global>
+    #tab-report h1 {
+      font-size: 1.4rem;
+      margin: 0 0 8px;
+    }
+
+    #tab-report .intro {
+      margin-bottom: 16px;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    #tab-report h2 {
+      font-size: 1.1rem;
+      margin: 0 0 12px;
+    }
+
+    #report-verify-step,
+    #report-submit-step {
+      max-width: 640px;
+    }
+
+    #report-status {
+      font-size: 0.85rem;
+      margin-top: 8px;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    #report-status.error {
+      color: #ff6b6b;
+    }
+
+    #report-status.success {
+      color: #7fff7f;
+    }
+
     .page-shell {
       padding: 24px 16px 40px;
     }

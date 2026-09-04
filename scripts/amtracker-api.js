@@ -48,6 +48,11 @@ function doPost(e) {
   if (action === "submit-exemption") {
     return handleSubmitExemption(e);
   }
+
+  if (action === "report-submission") {
+    return handleReport(e);
+  }
+
   return jsonResp({ error: "Unknown action" }, 400);
 }
 
@@ -65,7 +70,7 @@ function doGet(e) {
     return handleVerifyEmail(token);
   }
 
-  if (action === "check-verify" && email) {
+    if (action === "check-verify" && email) {
     return handleCheckVerify(email.toLowerCase().trim());
   }
 
@@ -102,6 +107,44 @@ function handleListExemptions() {
 }
 
 
+function handleReport(e) {
+  try {
+    const params = JSON.parse(e.postData.contents);
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("Reports"); 
+
+    if (!sheet) {
+      return jsonResp({ error: "Reports sheet not found" });
+    }
+
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+    const row = {};
+    row.course_name = params.course_name;
+    row.reason = params.reason_select || "";
+    row.instructor_contact = params.instructor_contact || "";
+    row.other_explanation = params.other_explanation || "";
+
+    // 5 submissions per hour per email
+    const limit = checkEmailRateLimit(params.submitter_email, 3600000, 5);
+    if (!limit.allowed) {
+      return jsonResp({ error: limit.error }, 429);
+    }
+    
+
+    const rowData = headers.map(h => row[h] ?? "");
+
+    sheet.appendRow(rowData);
+
+    return jsonResp({ success: true });
+  }
+  catch (err) {
+    return jsonResp({ error: err.message || "Submission failed" });
+  }
+}
+
+
 function handleSubmitExemption(e) {
   const lock = LockService.getScriptLock();
   // one submission written at a time
@@ -120,7 +163,7 @@ function handleSubmitExemption(e) {
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
 
     const row = {};
-    row.timestamp = new Date().toISOString();
+    row.created_at = new Date().toISOString();
     row.institution = params.institution || "";
     row.institution_id = params.institution_id || "";
     row.course_code = params.course_code || "";
@@ -131,6 +174,7 @@ function handleSubmitExemption(e) {
     row.submitter_email = params.submitter_email || "";
     row.vow = params.vow === true ? "TRUE" : "FALSE";
     row.info = params.info || "";
+    row.email_verified = "TRUE";
 
     // 5 submissions per hour per email
     const limit = checkEmailRateLimit(params.submitter_email, 3600000, 5);
