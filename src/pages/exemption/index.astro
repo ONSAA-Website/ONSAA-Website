@@ -208,7 +208,7 @@ const ALLOWED_INSTITUTIONS = [
 
             <div id="other-explanation" style="display:none;">
               <label for="other_explanation">Please specify why you believe this submission to be incorrect:</label>
-              <input id="other_explanation" name="other_explanation" type="text" style="display:none;"/>
+              <input id="other_explanation" name="other_explanation" type="text"/>
             </div>
 
             <div style="display:none;">
@@ -636,12 +636,24 @@ const ALLOWED_INSTITUTIONS = [
       }
     });
 
-    reasonSelect.addEventListener("change", async (e) => {
-      if (e.target.value == "Contacted Instructor" || e.target.value == "Is Instructor") {
-        document.getElementById("instructor-contact").style.display = "";
+    const other = document.getElementById("other-explanation");
+    const instructor = document.getElementById("instructor-contact");
+
+    reasonSelect.addEventListener("change", (e) => {
+      const selectedReason = e.target.value;
+
+      instructor.style.display = "none";
+      other.style.display = "none";
+
+      if (
+        selectedReason === "Contacted Instructor" ||
+        selectedReason === "Is Instructor"
+      ) {
+        instructor.style.display = "block";
       }
-      if (e.target.value == "Other") {
-        document.getElementById("other-explanation").style.display = "";
+
+      if (selectedReason === "Other") {
+        other.style.display = "block";
       }
     });
 
