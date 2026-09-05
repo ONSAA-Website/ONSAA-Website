@@ -40,10 +40,13 @@ const ALLOWED_INSTITUTIONS = [
       <div class="tabs">
         <button class="tab-btn active" data-tab="browse">Browse</button>
         <button class="tab-btn" data-tab="submit">Submit</button>
-        <button class="tab-btn" data-tab="report">Report Incorrect Submissions</button>
+        <button class="tab-btn" data-tab="report">Report</button>
       </div>
 
       <div id="tab-browse" class="tab-content active">
+        <p class="checkbox-label">
+            ⓘ ONSAA is not responsible for incorrect submissions. Please contact your instructor or check for an announcement to verify submissions.
+        </p>
         <div class="search-wrap">
           <input
             type="text"
@@ -64,6 +67,10 @@ const ALLOWED_INSTITUTIONS = [
 
       <div id="tab-submit" class="tab-content">
         <div id="verify-step">
+          <h2>Submit exemptions for your classes and/or assessments</h2>
+          <p class="intro">
+            Verified instructors can submit exemptions for their courses.
+          </p>
           <h2>Verify your institutional email</h2>
           <form id="verify-form">
             <label for="verify-email">Institutional email</label>
@@ -154,6 +161,10 @@ const ALLOWED_INSTITUTIONS = [
 
       <div id="tab-report" class="tab-content">
         <div id="report-verify-step">
+          <h2>Report incorrect or false exemptions</h2>
+          <p class="intro">
+            Only students and instructors with a verified institutional email can submit reports.
+          </p>
           <h2>Verify your institutional email</h2>
           <form id="report-verify-form">
             <label for="report-verify-email">Institutional email</label>
@@ -170,11 +181,6 @@ const ALLOWED_INSTITUTIONS = [
         </div>
 
         <div id="report-submit-step" style="display:none;">
-          <h1>Report incorrect or false exemptions</h1>
-          <p class="intro">
-            Only students and instructors with a verified institutional email can submit reports.
-          </p>
-
           <form id="report-form">
             <label for="report-course_name">Course Name</label>
             <div class="search-wrap">
@@ -949,9 +955,12 @@ const ALLOWED_INSTITUTIONS = [
       margin: 0 0 12px;
     }
 
+    #verify-step,
+    #submit-step,
     #report-verify-step,
     #report-submit-step {
-      max-width: 640px;
+      width: 100%;
+      max-width: 600px;
     }
 
     #report-status {
