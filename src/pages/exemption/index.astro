@@ -22,6 +22,46 @@ const ALLOWED_INSTITUTIONS = [
   "Toronto Metropolitan University"
   // TODO: add more
 ];
+
+const ALLOWED_DOMAINS = [
+  "edu",
+  "edu.ca",
+  "mail.utoronto.ca",
+  "utoronto.ca",
+  "mcgill.ca",
+  "ubc.ca",
+  "queensu.ca",
+  "yorku.ca",
+  "carleton.ca",
+  "uottawa.ca",
+  "ualberta.ca",
+  "ucalgary.ca",
+  "umanitoba.ca",
+  "usask.ca",
+  "mun.ca",
+  "upei.ca",
+  "acadiau.ca",
+  "dal.ca",
+  "concordia.ca",
+  "mcmaster.ca",
+  "uwaterloo.ca",
+  "uoguelph.ca",
+  "uwindsor.ca",
+  "brocku.ca",
+  "laurier.ca",
+  "ocad.ca",
+  "ryerson.ca",
+  "tmu.ca",
+  "sfu.ca",
+  "uvic.ca",
+  "unbc.ca",
+  "viu.ca",
+  "kpu.ca",
+  "bcit.ca",
+  "langara.ca",
+  "capilanou.ca",
+  "emilycarr.ca"
+];
 ---
 
 <Layout
@@ -191,6 +231,7 @@ const ALLOWED_INSTITUTIONS = [
                 placeholder="Search exemption by course code (e.g. CSC, ECO)..."
               />
               <div id="report-search-results" class="search-results"></div>
+              <p id="report-course-status" class="status"></p>
             </div>
 
             <label for="reason_select">Why do you believe this submission to be incorrect?</label>
@@ -204,19 +245,20 @@ const ALLOWED_INSTITUTIONS = [
             <div id="instructor-contact" style="display:none;">
               <label for="instructor_contact">Please provide the relevant instructor's email:</label>
               <input id="instructor_contact" name="instructor_contact" type="text"/>
+              <p id="email-status" class="status"></p>
             </div>
 
-            <div id="other-explanation" style="display:none;">
+            <div id="other-explanation" style="display:none; margin-bottom:14px;">
               <label for="other_explanation">Please specify why you believe this submission to be incorrect:</label>
               <input id="other_explanation" name="other_explanation" type="text"/>
             </div>
 
             <div style="display:none;">
-            <label for="reporter_email">Your institutional email</label>
+            <label for="submitter_email">Your institutional email</label>
             <input
               type="email"
-              id="reporter_email"
-              name="reporter_email"
+              id="submitter_email"
+              name="submitter_email"
               style="cursor: not-allowed; pointer-events: none;"
               readonly
             />
@@ -246,7 +288,7 @@ const ALLOWED_INSTITUTIONS = [
     </div>
   </div>
 
-  <script define:vars={{ APPS_SCRIPT_URL, ALLOWED_INSTITUTIONS }}>
+  <script define:vars={{ APPS_SCRIPT_URL, ALLOWED_INSTITUTIONS, ALLOWED_DOMAINS }}>
     let allCourses = [];
     let sortedInstitutions = []; 
     let searchableInstitutions = [];
@@ -289,7 +331,7 @@ const ALLOWED_INSTITUTIONS = [
     const reportVerifyStep = document.getElementById("report-verify-step");
     const reportForm = document.getElementById("report-form");
     const reportStatus = document.getElementById("report-status");
-    const reporterEmailInput = document.getElementById("reporter_email");
+    const reporterEmailInput = document.getElementById("submitter_email");
     const reasonSelect = document.getElementById("reason_select");
 
     // Build static allowlist for submit form
@@ -461,7 +503,7 @@ const ALLOWED_INSTITUTIONS = [
             reportVerifyStep.style.display = "none";
             reportSubmitStep.style.display = "block";
 
-            const reporterEmailInput = document.getElementById("reporter_email");
+            const reporterEmailInput = document.getElementById("submitter_email");
             if (reporterEmailInput) {
               reporterEmailInput.value = email;
               reporterEmailInput.placeholder = email;
@@ -531,10 +573,63 @@ const ALLOWED_INSTITUTIONS = [
       }, 300);
     })();
 
+    function clearStatus(element) {
+      element.textContent = "";
+      element.className = "status";
+    }
+
+    function resetSubmitForm() {
+      exemptionForm.reset();
+
+      // submitStep.style.display = "none";
+      // verifyStep.style.display = "block";
+
+      institutionIdInput.value = "";
+      institutionResults.innerHTML = "";
+      institutionResults.classList.remove("show");
+
+      isValidSelection = false;
+      isNameValid = false;
+
+      clearStatus(verifyStatus);
+      clearStatus(submitStatus);
+      clearStatus(institutionStatus);
+      clearStatus(nameStatus);
+    }
+
+    function resetReportForm() {
+      reportForm.reset();
+
+      // reportSubmitStep.style.display = "none";
+      // reportVerifyStep.style.display = "block";
+
+      selectedReportCourse = null;
+      isInstructorEmailValid = false;
+
+      reportSearchResults.innerHTML = "";
+      reportSearchResults.classList.remove("show");
+
+      instructor.style.display = "none";
+      other.style.display = "none";
+
+      clearStatus(reportVerifyStatus);
+      clearStatus(reportStatus);
+      clearStatus(reportCourseStatus);
+      clearStatus(emailStatus);
+    }
+
     // Tabs: switch content, red underline on active
     tabBtns.forEach((button) => {
       button.addEventListener("click", () => {
         const tabName = button.dataset.tab;
+
+        if (tabName === "submit") {
+          resetSubmitForm();
+        }
+
+        if (tabName === "report") {
+          resetReportForm();
+        }
 
         tabBtns.forEach((btn) => {
           btn.classList.toggle("active", btn === button);
@@ -657,12 +752,161 @@ const ALLOWED_INSTITUTIONS = [
       }
     });
 
+    const instructorEmail = document.getElementById("instructor_contact");
+    const emailStatus = document.getElementById("email-status");
+    instructorEmail.addEventListener("input", () => {
+      const email = instructorEmail.value.trim().toLowerCase();
+
+      isInstructorEmailValid = false;
+      emailStatus.textContent = "";
+      emailStatus.className = "status";
+
+      if (!email) return;
+
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!emailPattern.test(email)) {
+        emailStatus.textContent = "Please enter a valid email address.";
+        emailStatus.className = "status error";
+        return;
+      }
+
+      const domain = email.split("@")[1];
+
+      const isAllowedDomain = ALLOWED_DOMAINS.some(
+        (allowedDomain) =>
+          domain === allowedDomain || domain.endsWith(`.${allowedDomain}`)
+      );
+
+      if (!isAllowedDomain) {
+        emailStatus.textContent =
+          "Please enter an official institutional email address.";
+        emailStatus.className = "status error";
+        return;
+      }
+
+      isInstructorEmailValid = true;
+      emailStatus.textContent = "Institutional email looks valid.";
+      emailStatus.className = "status success";
+    });
+
+    const reportCourseInput = document.getElementById("report-course_name");
+    const reportSearchResults = document.getElementById("report-search-results");
+    const reportCourseStatus = document.getElementById("report-course-status");
+
+    reportCourseInput.addEventListener("blur", () => {
+      setTimeout(() => {
+        reportSearchResults.classList.remove("show");
+        if (!selectedReportCourse  && reportCourseInput.value.trim()) {
+          reportCourseStatus.textContent =
+            "Please select an exemption from the search results.";
+          reportCourseStatus.className = "status error";
+        }
+      }, 150);
+    });
+
+    reportCourseInput.addEventListener("input", () => {
+      const query = reportCourseInput.value.trim().toLowerCase();
+
+      selectedReportCourse = null;
+      reportCourseInput.removeAttribute("data-course-index");
+      reportCourseStatus.textContent = "";
+      reportCourseStatus.className = "status";
+
+      reportSearchResults.innerHTML = "";
+      reportSearchResults.classList.remove("show");
+
+      if (!query) return;
+
+      const matches = allCourses.filter((course) =>
+        course.code.toLowerCase().includes(query) ||
+        course.name.toLowerCase().includes(query) ||
+        course.institution.toLowerCase().includes(query)
+      );
+
+      if (!matches.length) {
+        reportSearchResults.innerHTML =
+          "<div class='no-results'>No matching exemptions.</div>";
+        reportSearchResults.classList.add("show");
+        return;
+      }
+
+      matches.forEach((course) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "search-result-item";
+
+        const code = document.createElement("span");
+        code.className = "result-code";
+        code.textContent = course.code;
+
+        const name = document.createElement("span");
+        name.className = "result-name";
+        name.textContent = course.name;
+
+        const institution = document.createElement("span");
+        institution.className = "result-institution";
+        institution.textContent = course.institution;
+
+        button.append(code, name, institution);
+
+        button.addEventListener("mousedown", () => {
+          selectedReportCourse = course;
+
+          reportCourseInput.value =
+            `${course.code} – ${course.name} (${course.institution})`;
+
+          reportCourseStatus.textContent = "Exemption selected.";
+          reportCourseStatus.className = "status success";
+
+          reportSearchResults.innerHTML = "";
+          reportSearchResults.classList.remove("show");
+        });
+
+        reportSearchResults.appendChild(button);
+      });
+
+      reportSearchResults.classList.add("show");
+    });
+
     // report submit
     reportForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
       if (!window.verifiedUserEmail) {
-        reportStatus.textContent = "You must verify your institutional email before submitting a report.";
+        reportStatus.textContent =
+          "You must verify your institutional email before submitting a report.";
+        reportStatus.className = "status error";
+        return;
+      }
+
+      if (!selectedReportCourse) {
+        reportCourseStatus.textContent =
+          "Please select an exemption from the search results.";
+        reportCourseStatus.className = "status error";
+        reportCourseInput.focus();
+        return;
+      }
+
+      const instructorFieldVisible =
+        instructor.style.display !== "none";
+
+      if (instructorFieldVisible && !isInstructorEmailValid) {
+        emailStatus.textContent =
+          "Please enter a valid institutional instructor email.";
+        emailStatus.className = "status error";
+        instructorEmail.focus();
+        return;
+      }
+
+      const otherFieldVisible = other.style.display !== "none";
+      const otherExplanation = document
+        .getElementById("other_explanation")
+        ?.value.trim();
+
+      if (otherFieldVisible && !otherExplanation) {
+        reportStatus.textContent =
+          "Please explain why you believe this exemption is incorrect.";
         reportStatus.className = "status error";
         return;
       }
@@ -670,37 +914,48 @@ const ALLOWED_INSTITUTIONS = [
       const formData = new FormData(reportForm);
       const payload = Object.fromEntries(formData.entries());
 
-      payload.reporter_email = window.verifiedUserEmail;
+      payload.submitter_email = window.verifiedUserEmail;
+
+      payload.course_code = selectedReportCourse.code;
+      payload.course_name = selectedReportCourse.name;
+      payload.institution = selectedReportCourse.institution;
 
       reportStatus.textContent = "Submitting report...";
       reportStatus.className = "status";
 
       try {
-        const res = await fetch(APPS_SCRIPT_URL + "?action=report-submission", {
-          method: "POST",
-          headers: { "Content-Type": "application/json;charset=utf-8" },
-          body: JSON.stringify(payload)
-        });
+        const res = await fetch(
+          APPS_SCRIPT_URL + "?action=report-submission",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json;charset=utf-8",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
 
         const json = await res.json();
 
-        if (json.error) {
-          reportStatus.textContent = json.error;
-          reportStatus.className = "status error";
-          return;
+        if (!res.ok || json.error) {
+          throw new Error(json.error || "Request failed");
         }
 
         reportStatus.textContent = "Report submitted successfully.";
         reportStatus.className = "status success";
+
         reportForm.reset();
+        selectedReportCourse = null;
+        isInstructorEmailValid = false;
       } catch (err) {
         console.error("Report submission failed:", err);
-        reportStatus.textContent = "Failed to submit report.";
+        reportStatus.textContent =
+          err.message || "Failed to submit report.";
         reportStatus.className = "status error";
       }
     });
 
-    // email verification
+    // emaireportForm.l verification
     verifyForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = verifyEmailInput.value.trim();
@@ -801,6 +1056,8 @@ const ALLOWED_INSTITUTIONS = [
     const institutionalEmail = document.getElementById("submitter_email");
 
     let isValidSelection = false;
+    let selectedReportCourse = null;
+    let isInstructorEmailValid = false;
 
     institutionalEmail.placeholder = verifyEmailInput.value.trim();
 
@@ -1386,7 +1643,7 @@ const ALLOWED_INSTITUTIONS = [
 
     .status {
       font-size: 0.85rem;
-      margin-top: 8px;
+      margin-top: 2px;
       color: rgba(255, 255, 255, 0.85);
     }
 

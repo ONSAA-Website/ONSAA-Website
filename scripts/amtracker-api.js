@@ -54,7 +54,7 @@ function doPost(e) {
     return handleReport(e);
   }
 
-  return jsonResp({ error: "Unknown action" }, 400);
+  return jsonResp({ error: "Unknown action: " + action }, 400);
 }
 
 // entry point for GET requests
@@ -126,6 +126,7 @@ function handleReport(e) {
     row.reason = params.reason_select || "";
     row.instructor_contact = params.instructor_contact || "";
     row.other_explanation = params.other_explanation || "";
+    row.reporter_email = params.submitter_email;
 
     // 5 submissions per hour per email
     const limit = checkEmailRateLimit(params.submitter_email, 3600000, 5);
@@ -133,7 +134,6 @@ function handleReport(e) {
       return jsonResp({ error: limit.error }, 429);
     }
     
-
     const rowData = headers.map(h => row[h] ?? "");
 
     sheet.appendRow(rowData);
@@ -293,7 +293,7 @@ function isAllowedDomain(email) {
   if (!domain) return false;
 
   if (domain.endsWith(".edu")) return true;
-  if (ALLOWED_DOMAINS.includes(domain) || ALLOWED_DOMAINS.includes(domain.split(".")[1])) return true;
+  if (ALLOWED_DOMAINS.includes(domain) || ALLOWED_DOMAINS.includes(domain.split(".").slice(-2).join("."))) return true;
   if (domain.endsWith(".edu.ca") || domain.endsWith(".ac.ca")) return true;
 
   return false;
