@@ -320,7 +320,6 @@ const ALLOWED_DOMAINS = [
     const verifyButton = document.getElementById("verify-button");
 
     const instData = sortedInstitutions;
-    const coursesData = allCourses;
 
     const reportVerifyForm = document.getElementById("report-verify-form");
     const reportVerifyEmailInput = document.getElementById("report-verify-email");
@@ -597,6 +596,12 @@ const ALLOWED_DOMAINS = [
       clearStatus(nameStatus);
     }
 
+    function resetBrowse() {
+      courseSearch.value = "";
+      searchResults.innerHTML = "";
+      searchResults.classList.remove("show");
+    }
+
     function resetReportForm() {
       reportForm.reset();
 
@@ -629,6 +634,10 @@ const ALLOWED_DOMAINS = [
 
         if (tabName === "report") {
           resetReportForm();
+        }
+
+        if (tabName === "browse") {
+          resetBrowse();
         }
 
         tabBtns.forEach((btn) => {
@@ -665,7 +674,7 @@ const ALLOWED_DOMAINS = [
         return;
       }
 
-      const matches = coursesData.filter(c =>
+      const matches = allCourses.filter(c =>
         c.code.toLowerCase().includes(query) ||
         c.name.toLowerCase().includes(query) ||
         c.institution.toLowerCase().includes(query)
