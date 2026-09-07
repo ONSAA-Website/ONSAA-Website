@@ -245,6 +245,8 @@ const ALLOWED_DOMAINS = [
             <div id="instructor-contact" style="display:none;">
               <label for="instructor_contact">Please provide the relevant instructor's email:</label>
               <input id="instructor_contact" name="instructor_contact" type="text"/>
+              <p class="institution-status">ⓘ Reports are manually reviewed and verified. If you are the instructor, we recommend emailing us directly at <a href="mailto:on.students.against.austerity@gmail.com">on.students.against.austerity@gmail.com</a></p>
+              <br>
               <p id="email-status" class="status"></p>
             </div>
 
@@ -477,11 +479,18 @@ const ALLOWED_DOMAINS = [
             "?action=check-token&token=" +
             encodeURIComponent(token) +
             "&email=" +
-            encodeURIComponent(email)
+            encodeURIComponent(email) + 
+            "&scope=" + 
+            encodeURIComponent(scope)
         );
         const json = await res.json();
 
         if (json.verified) {
+          // starting one hour session; limited sessions increase security and reduce email sends
+          sessionStorage.setItem("verifiedEmail", email);
+          sessionStorage.setItem("verificationToken", token);
+          sessionStorage.setItem("verificationScope", scope);
+
           window.verifiedUserEmail = email;
 
           const isReportVerification = scope === "report";
@@ -923,7 +932,11 @@ const ALLOWED_DOMAINS = [
       const formData = new FormData(reportForm);
       const payload = Object.fromEntries(formData.entries());
 
-      payload.submitter_email = window.verifiedUserEmail;
+      payload.submitter_email =
+        sessionStorage.getItem("verifiedEmail");
+
+      payload.verification_token =
+        sessionStorage.getItem("verificationToken");
 
       payload.course_code = selectedReportCourse.code;
       payload.course_name = selectedReportCourse.name;
@@ -956,6 +969,8 @@ const ALLOWED_DOMAINS = [
         reportForm.reset();
         selectedReportCourse = null;
         isInstructorEmailValid = false;
+
+        // redirect to template + email template (?)
       } catch (err) {
         console.error("Report submission failed:", err);
         reportStatus.textContent =
@@ -1179,7 +1194,8 @@ const ALLOWED_DOMAINS = [
       const formData = new FormData(exemptionForm);
       const payload = Object.fromEntries(formData.entries());
 
-      payload.submitter_email = window.verifiedUserEmail || verifyEmailInput.value.trim();
+      payload.submitter_email = sessionStorage.getItem("verifiedEmail");
+      payload.verification_token = sessionStorage.getItem("verificationToken");
       payload.vow = document.getElementById("vow").checked;
 
       submitStatus.textContent = "Submitting...";

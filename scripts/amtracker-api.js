@@ -68,7 +68,7 @@ function doGet(e) {
   }
 
   if (action === "verify-email" && token) {
-    return handleVerifyEmail(token);
+    return handleVerifyEmail(token, e.parameter.scope);
   }
 
     if (action === "check-verify" && email) {
@@ -76,7 +76,7 @@ function doGet(e) {
   }
 
   if (action === "check-token" && email && token) {
-    return handleCheckToken(email, token);
+    return handleCheckToken(email, token, e.parameter.scope);
   }
 
   return jsonResp({ status: "ok" });
@@ -119,6 +119,15 @@ function handleReport(e) {
       return jsonResp({ error: "Reports sheet not found" });
     }
 
+    const email = params.submitter_email;
+    const token = params.token;
+    if (!isValidVerificationSession(email, token, "token")) {
+      return jsonResp(
+        { error: "Your verification session has expired. Please verify your email again." },
+        403
+      );
+    }
+
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
 
     const row = {};
@@ -126,7 +135,7 @@ function handleReport(e) {
     row.reason = params.reason_select || "";
     row.instructor_contact = params.instructor_contact || "";
     row.other_explanation = params.other_explanation || "";
-    row.reporter_email = params.submitter_email;
+    row.reporter_email = email;
 
     // 5 submissions per hour per email
     const limit = checkEmailRateLimit(params.submitter_email, 3600000, 5);
@@ -154,6 +163,16 @@ function handleSubmitExemption(e) {
   try {
     const params = JSON.parse(e.postData.contents);
 
+    const email = String(params.submitter_email || "").toLowerCase().trim();
+    const token = String(params.verification_token || "");
+
+    if (!isValidVerificationSession(email, token, "submit")) {
+      return jsonResp(
+        { error: "Your verification session has expired. Please verify your email again." },
+        403
+      );
+    }
+
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName("Submissions"); 
 
@@ -172,7 +191,7 @@ function handleSubmitExemption(e) {
     row.exemption_type = params.exemption_type || "";
     row.description = params.description || "";
     row.submitter_name = params.submitter_name || "";
-    row.submitter_email = params.submitter_email || "";
+    row.submitter_email = email || "";
     row.vow = params.vow === true ? "TRUE" : "FALSE";
     row.info = params.info || "";
     row.email_verified = "TRUE";
@@ -282,7 +301,7 @@ function getVerifSheet() {
   let sheet = ss.getSheetByName("verifications");
   if (!sheet) {
     sheet = ss.insertSheet("verifications");
-    sheet.appendRow(["email", "token", "verified", "created_at"]);
+    sheet.appendRow(["email", "token", "scope", "verified", "created_at", "expires_at"]);
   }
   return sheet;
 }
@@ -319,24 +338,36 @@ function handleRequestVerify(e) {
     const verifSheet = getVerifSheet();
     const data = verifSheet.getDataRange().getValues();
     const headers = data[0];
-    const emailIdx = headers.indexOf("email");
-    const verifiedIdx = headers.indexOf("verified");
+    // const emailIdx = headers.indexOf("email");
+    // const verifiedIdx = headers.indexOf("verified");
 
-    // if already verified, say so
+    /* if already verified, say so
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       if (row[emailIdx] === email && row[verifiedIdx] === true) {
         return jsonResp({ success: true, alreadyVerified: true });
       }
-    }
+    } */
 
     // create token and store
+    const scope = body.scope === "report" ? "report" : "submit";
     const token = Utilities.getUuid();
-    verifSheet.appendRow([email, token, false, new Date()]);
+
+    const createdAt = new Date();
+    const expiresAt = new Date(createdAt.getTime() + 60 * 60 * 1000); // session token valid for 1 hr
+
+    verifSheet.appendRow([
+      email,
+      token,
+      scope,
+      false,
+      createdAt,
+      expiresAt
+    ]);
 
 
     // proxy URL for verification + redirect (cloudflare worker)
-    const verifyUrl = "https://autumn-term-3542.chrollobrollo.workers.dev/exemption/verify?token=" + encodeURIComponent(token) + "&email=" + encodeURIComponent(email);
+    const verifyUrl = "https://autumn-term-3542.chrollobrollo.workers.dev/exemption/verify?token=" + encodeURIComponent(token) + "&email=" + encodeURIComponent(email) + "&scope=" + encodeURIComponent(scope);
 
     GmailApp.sendEmail(
       email,
@@ -358,44 +389,37 @@ function handleRequestVerify(e) {
 }
 
 // handle email verification request (request-verify)
-function handleVerifyEmail(token) {
-  try {
-    const verifSheet = getVerifSheet();
-    const data = verifSheet.getDataRange().getValues();
-    const headers = data[0];
+function handleVerifyEmail(token, scope) {
+  const sheet = getVerifSheet();
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
 
-    const tokenIdx = headers.indexOf("token");
-    const emailIdx = headers.indexOf("email");
-    const verifiedIdx = headers.indexOf("verified");
+  const emailIdx = headers.indexOf("email");
+  const tokenIdx = headers.indexOf("token");
+  const scopeIdx = headers.indexOf("scope");
+  const verifiedIdx = headers.indexOf("verified");
+  const expiresIdx = headers.indexOf("expires_at");
 
-    if (tokenIdx === -1 || verifiedIdx === -1 || emailIdx === -1) {
-      return htmlResp("Error: verification sheet structure is invalid.");
-    }
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
 
-    let rowIndex = -1;
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][tokenIdx] === token) {
-        rowIndex = i + 1;
-        break;
-      }
-    }
+    const validToken = row[tokenIdx] === token;
+    const validScope = row[scopeIdx] === scope;
+    const notExpired = new Date(row[expiresIdx]) > new Date();
 
-    if (rowIndex === -1) {
-      return htmlResp("Invalid or expired verification link.");
-    }
+    if (validToken && validScope && notExpired) {
+      sheet.getRange(i + 1, verifiedIdx + 1).setValue(true);
 
-    verifSheet.getRange(rowIndex, verifiedIdx + 1).setValue(true);
-    const email = data[rowIndex - 1][emailIdx];
-    
-    const redirectBase = "http://localhost:4321/exemption";
-    const redirectUrl =
-      redirectBase +
-      "?signal-verify=1&email=" +
-      encodeURIComponent(email) +
-      "&token=" +
-      encodeURIComponent(token);
+      const email = String(row[emailIdx]).toLowerCase().trim();
 
-    return htmlResp(`
+      const redirectUrl =
+        "https://localhost:4321/exemption" +
+        "?verified=1" +
+        "&email=" + encodeURIComponent(email) +
+        "&token=" + encodeURIComponent(token) +
+        "&scope=" + encodeURIComponent(scope);
+
+      return htmlResp(`
       <!DOCTYPE html>
       <html>
         <head>
@@ -414,35 +438,7 @@ function handleVerifyEmail(token) {
         </body>
       </html>
     `);
-  } catch (err) {
-    return htmlResp("Error verifying email: " + err.message);
-  }
-}
-
-// check if an email is verified (legacy)
-function handleCheckVerify(email) {
-  try {
-    const verifSheet = getVerifSheet();
-    const data = verifSheet.getDataRange().getValues();
-    const headers = data[0];
-
-    const emailIdx = headers.indexOf("email");
-    const verifiedIdx = headers.indexOf("verified");
-
-    if (emailIdx === -1 || verifiedIdx === -1) {
-      return jsonResp({ verified: false });
     }
-
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      if (row[emailIdx] === email && row[verifiedIdx] === true) {
-        return jsonResp({ verified: true });
-      }
-    }
-
-    return jsonResp({ verified: false });
-  } catch (err) {
-    return jsonResp({ verified: false });
   }
 }
 
@@ -455,7 +451,9 @@ function handleCheckToken(email, token) {
 
     const emailIdx = headers.indexOf("email");
     const tokenIdx = headers.indexOf("token");
+    const scopeIdx = headers.indexOf("scope");
     const verifiedIdx = headers.indexOf("verified");
+    const expiresIdx = headers.indexOf("expires_at");
 
     if (emailIdx === -1 || tokenIdx === -1 || verifiedIdx === -1) {
       return jsonResp({ verified: false });
@@ -463,15 +461,42 @@ function handleCheckToken(email, token) {
 
     const emailNorm = (email || "").toLowerCase().trim();
 
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      if (row[emailIdx] === emailNorm && row[tokenIdx] === token && row[verifiedIdx] === true) {
-        return jsonResp({ verified: true, email: emailNorm });
-      }
-    }
+    const verified = data.slice(1).some((row) => {
+      return (
+        String(row[emailIdx]).toLowerCase().trim() === emailNorm &&
+        row[tokenIdx] === token &&
+        row[scopeIdx] === scope &&
+        row[verifiedIdx] === true &&
+        new Date(row[expiresIdx]) > new Date()
+      );
+    });
 
-    return jsonResp({ verified: false });
+    return jsonResp({ verified });
   } catch (err) {
     return jsonResp({ verified: false });
   }
+}
+
+function isValidVerificationSession(email, token, scope) {
+  const sheet = getVerifSheet();
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+
+  const emailIdx = headers.indexOf("email");
+  const tokenIdx = headers.indexOf("token");
+  const scopeIdx = headers.indexOf("scope");
+  const verifiedIdx = headers.indexOf("verified");
+  const expiresIdx = headers.indexOf("expires_at");
+
+  const normalizedEmail = String(email || "").toLowerCase().trim();
+
+  return data.slice(1).some((row) => {
+    return (
+      String(row[emailIdx]).toLowerCase().trim() === normalizedEmail &&
+      row[tokenIdx] === token &&
+      row[scopeIdx] === scope &&
+      row[verifiedIdx] === true &&
+      new Date(row[expiresIdx]) > new Date()
+    );
+  });
 }
