@@ -543,7 +543,9 @@ function handleCheckToken(email, token, scope) {
 
     const emailIdx = headers.indexOf("email");
     const tokenIdx = headers.indexOf("token");
+    const scopeIdx = headers.indexOf("scope");
     const verifiedIdx = headers.indexOf("verified");
+    const expiresIdx = headers.indexOf("expires_at");
 
     if (emailIdx === -1 || tokenIdx === -1 || verifiedIdx === -1) {
       return jsonResp({ verified: false });
