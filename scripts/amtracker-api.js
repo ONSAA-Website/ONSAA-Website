@@ -42,6 +42,7 @@ const ALLOWED_DOMAINS = [
 // entry point for POST requests
 function doPost(e) {
   const action = e.parameter.action;
+
   if (action === "request-verify") {
     return handleRequestVerify(e);
   }
@@ -120,8 +121,8 @@ function handleReport(e) {
     }
 
     const email = params.submitter_email;
-    const token = params.token;
-    if (!isValidVerificationSession(email, token, "token")) {
+    const token = String(params.verification_token || "");
+    if (!isValidVerificationSession(email, token, "report")) {
       return jsonResp(
         { error: "Your verification session has expired. Please verify your email again." },
         403
@@ -197,7 +198,7 @@ function handleSubmitExemption(e) {
     row.email_verified = "TRUE";
 
     // 5 submissions per hour per email
-    const limit = checkEmailRateLimit(params.submitter_email, 3600000, 5);
+    const limit = checkEmailRateLimit(email, 3600000, 5);
     if (!limit.allowed) {
       return jsonResp({ error: limit.error }, 429);
     }
@@ -321,8 +322,16 @@ function isAllowedDomain(email) {
 // send verification email (request-verify)
 function handleRequestVerify(e) {
   try {
-    const body = JSON.parse(e.postData.contents);
-    const email = (body.email || "").toLowerCase().trim();
+    const data = JSON.parse(e.postData.contents);
+
+    const email = String(data.email || "").toLowerCase().trim();
+    const scope = data.scope === "report" ? "report" : "submit";
+
+    const existingEmail = String(data.existing_email || "")
+      .toLowerCase()
+      .trim();
+
+    const existingToken = String(data.existing_token || "");
 
     if (!email || !email.includes("@")) {
       return jsonResp({ error: "Invalid email" }, 400);
@@ -335,30 +344,35 @@ function handleRequestVerify(e) {
       );
     }
 
-    const verifSheet = getVerifSheet();
-    const data = verifSheet.getDataRange().getValues();
+    const sessionActive =
+      existingEmail === email &&
+      isValidVerificationSession(existingEmail, existingToken, scope);
 
-    const verified = data.slice(1).some((row) => {
-      return (
-        String(row[emailIdx]).toLowerCase().trim() === emailNorm &&
-        row[tokenIdx] === token &&
-        row[scopeIdx] === scope &&
-        row[verifiedIdx] === true &&
-        new Date(row[expiresIdx]) > new Date()
-      );
-    });
-
-    // if session is active, bypass email verification
-    if (verified) {
-      return jsonResp({ verified: True })
+    if (sessionActive) {
+      return jsonResp({
+        success: true,
+        alreadyVerified: true
+      });
     }
 
-    // create token and store
-    const scope = body.scope === "report" ? "report" : "submit";
-    const token = Utilities.getUuid();
+    const verificationLimit = checkEmailRateLimit(
+      "verify:" + email,
+      60 * 60 * 1000,
+      3
+    );
 
+    if (!verificationLimit.allowed) {
+      return jsonResp(
+        { error: "Too many verification emails requested. Please try again later." },
+        429
+      );
+    }
+
+    const token = Utilities.getUuid();
     const createdAt = new Date();
-    const expiresAt = new Date(createdAt.getTime() + 60 * 60 * 1000); // session token valid for 1 hr
+    const expiresAt = new Date(createdAt.getTime() + 60 * 60 * 1000);
+
+    const verifSheet = getVerifSheet();
 
     verifSheet.appendRow([
       email,
@@ -369,26 +383,27 @@ function handleRequestVerify(e) {
       expiresAt
     ]);
 
-
-    // proxy URL for verification + redirect (cloudflare worker)
-    const verifyUrl = "https://autumn-term-3542.chrollobrollo.workers.dev/exemption/verify?token=" + encodeURIComponent(token) + "&email=" + encodeURIComponent(email) + "&scope=" + encodeURIComponent(scope);
+    const verifyUrl =
+      "https://autumn-term-3542.chrollobrollo.workers.dev/exemption/verify" +
+      "?token=" + encodeURIComponent(token) +
+      "&email=" + encodeURIComponent(email) +
+      "&scope=" + encodeURIComponent(scope);
 
     GmailApp.sendEmail(
       email,
       "Verify your email – Academic Exemption Tracker",
       "Click the link to verify your email: " + verifyUrl,
       {
-        htmlBody: `
-          <p>Click the link below to verify your email address:</p>
-          <p><a href="${verifyUrl}">${verifyUrl}</a></p>
-          <p>If you did not request this, you can ignore this email.</p>
-        `
+        htmlBody:
+          "<p>Click the link below to verify your email address:</p>" +
+          '<p><a href="' + verifyUrl + '">' + verifyUrl + "</a></p>" +
+          "<p>If you did not request this, you can ignore this email.</p>"
       }
     );
 
     return jsonResp({ success: true, alreadyVerified: false });
   } catch (err) {
-    return jsonResp({ error: err.message }, 500);
+    return jsonResp({ error: err.message || "Could not request verification." }, 500);
   }
 }
 
@@ -450,30 +465,18 @@ function handleVerifyEmail(token, scope) {
 function handleCheckToken(email, token, scope) {
   try {
     const verifSheet = getVerifSheet();
-    const data = verifSheet.getDataRange().getValues();
-    const headers = data[0];
+    const vdata = verifSheet.getDataRange().getValues();
+    const headers = vdata[0];
 
     const emailIdx = headers.indexOf("email");
     const tokenIdx = headers.indexOf("token");
-    const scopeIdx = headers.indexOf("scope");
     const verifiedIdx = headers.indexOf("verified");
-    const expiresIdx = headers.indexOf("expires_at");
 
     if (emailIdx === -1 || tokenIdx === -1 || verifiedIdx === -1) {
       return jsonResp({ verified: false });
     }
 
-    const emailNorm = (email || "").toLowerCase().trim();
-
-    const verified = data.slice(1).some((row) => {
-      return (
-        String(row[emailIdx]).toLowerCase().trim() === emailNorm &&
-        row[tokenIdx] === token &&
-        row[scopeIdx] === scope &&
-        row[verifiedIdx] === true &&
-        new Date(row[expiresIdx]) > new Date()
-      );
-    });
+    const verified = isValidVerificationSession(email, token, scope);
 
     return jsonResp({ verified });
   } catch (err) {
@@ -499,7 +502,7 @@ function isValidVerificationSession(email, token, scope) {
       String(row[emailIdx]).toLowerCase().trim() === normalizedEmail &&
       row[tokenIdx] === token &&
       row[scopeIdx] === scope &&
-      row[verifiedIdx] === true &&
+      String(row[verifiedIdx]).toUpperCase() === "TRUE" &&
       new Date(row[expiresIdx]) > new Date()
     );
   });

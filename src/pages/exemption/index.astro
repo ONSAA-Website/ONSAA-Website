@@ -994,6 +994,9 @@ const ALLOWED_DOMAINS = [
           body: JSON.stringify({
             email,
             scope: "submit",
+            existing_email: sessionStorage.getItem("verifiedEmail"),
+            existing_token: sessionStorage.getItem("verificationToken"),
+            existing_scope: sessionStorage.getItem("verificationScope")
           })
         });
 
@@ -1005,7 +1008,7 @@ const ALLOWED_DOMAINS = [
           return;
         }
 
-        if (json.verified) {
+        if (json.alreadyVerified) {
           verifyStatus.textContent = "Your email is verified. You may proceed to submit.";
           verifyStatus.className = "status success";
           verifyStep.style.display = "none";
@@ -1037,6 +1040,9 @@ const ALLOWED_DOMAINS = [
           body: JSON.stringify({
             email,
             scope: "report",
+            existing_email: sessionStorage.getItem("verifiedEmail"),
+            existing_token: sessionStorage.getItem("verificationToken"),
+            existing_scope: sessionStorage.getItem("verificationScope")
           })
         });
 
@@ -1048,7 +1054,7 @@ const ALLOWED_DOMAINS = [
           return;
         }
 
-        if (json.verified) {
+        if (json.alreadyVerified) {
           reportVerifyStatus.textContent = "Your email is verified. You may proceed to submit a report.";
           reportVerifyStatus.className = "status success";
           reportVerifyStep.style.display = "none";
