@@ -138,7 +138,7 @@ function handleReport(e) {
     row.reporter_email = email;
 
     // 5 submissions per hour per email
-    const limit = checkEmailRateLimit(params.submitter_email, 3600000, 5);
+    const limit = checkEmailRateLimit(email, 3600000, 5);
     if (!limit.allowed) {
       return jsonResp({ error: limit.error }, 429);
     }
@@ -337,17 +337,21 @@ function handleRequestVerify(e) {
 
     const verifSheet = getVerifSheet();
     const data = verifSheet.getDataRange().getValues();
-    const headers = data[0];
-    // const emailIdx = headers.indexOf("email");
-    // const verifiedIdx = headers.indexOf("verified");
 
-    /* if already verified, say so
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      if (row[emailIdx] === email && row[verifiedIdx] === true) {
-        return jsonResp({ success: true, alreadyVerified: true });
-      }
-    } */
+    const verified = data.slice(1).some((row) => {
+      return (
+        String(row[emailIdx]).toLowerCase().trim() === emailNorm &&
+        row[tokenIdx] === token &&
+        row[scopeIdx] === scope &&
+        row[verifiedIdx] === true &&
+        new Date(row[expiresIdx]) > new Date()
+      );
+    });
+
+    // if session is active, bypass email verification
+    if (verified) {
+      return jsonResp({ verified: True })
+    }
 
     // create token and store
     const scope = body.scope === "report" ? "report" : "submit";
@@ -443,7 +447,7 @@ function handleVerifyEmail(token, scope) {
 }
 
 // check if email+token pair is valid and verified
-function handleCheckToken(email, token) {
+function handleCheckToken(email, token, scope) {
   try {
     const verifSheet = getVerifSheet();
     const data = verifSheet.getDataRange().getValues();

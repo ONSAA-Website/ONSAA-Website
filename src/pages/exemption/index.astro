@@ -979,7 +979,7 @@ const ALLOWED_DOMAINS = [
       }
     });
 
-    // emaireportForm.l verification
+    // email verification
     verifyForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = verifyEmailInput.value.trim();
@@ -1005,8 +1005,8 @@ const ALLOWED_DOMAINS = [
           return;
         }
 
-        if (json.alreadyVerified) {
-          verifyStatus.textContent = "Your email is already verified. You may proceed to submit.";
+        if (json.verified) {
+          verifyStatus.textContent = "Your email is verified. You may proceed to submit.";
           verifyStatus.className = "status success";
           verifyStep.style.display = "none";
           submitStep.style.display = "block";
@@ -1048,8 +1048,8 @@ const ALLOWED_DOMAINS = [
           return;
         }
 
-        if (json.alreadyVerified) {
-          reportVerifyStatus.textContent = "Your email is already verified. You may proceed to submit a report.";
+        if (json.verified) {
+          reportVerifyStatus.textContent = "Your email is verified. You may proceed to submit a report.";
           reportVerifyStatus.className = "status success";
           reportVerifyStep.style.display = "none";
           reportSubmitStep.style.display = "block";
