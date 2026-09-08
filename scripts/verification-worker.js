@@ -1,5 +1,3 @@
-// CF worker for verification to proxy appscript link
-
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzER3j3__BhPZPQXMEVcipD58Gay-jOa0ET5Evb5tDQs9XCxnciV4eS0N3_X6ScnTfPhQ/exec";
 const APP_ORIGIN = "onsaa.org"; 
 
