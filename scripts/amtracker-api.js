@@ -68,8 +68,8 @@ function doGet(e) {
     return handleListExemptions();
   }
 
-  if (action === "verify-email" && token) {
-    return handleVerifyEmail(token, e.parameter.scope);
+  if (action === "verify-email" && token && email) {
+    return handleVerifyEmail(token, email, e.parameter.scope);
   }
 
     if (action === "check-verify" && email) {
@@ -358,7 +358,7 @@ function handleRequestVerify(e) {
     const verificationLimit = checkEmailRateLimit(
       "verify:" + email,
       60 * 60 * 1000,
-      3
+      5
     );
 
     if (!verificationLimit.allowed) {
@@ -408,7 +408,7 @@ function handleRequestVerify(e) {
 }
 
 // handle email verification request (request-verify)
-function handleVerifyEmail(token, scope) {
+function handleVerifyEmail(token, email, scope) {
   const sheet = getVerifSheet();
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
@@ -425,12 +425,17 @@ function handleVerifyEmail(token, scope) {
     const validToken = row[tokenIdx] === token;
     const validScope = row[scopeIdx] === scope;
     const notExpired = new Date(row[expiresIdx]) > new Date();
+    const normEmail = String(email).toLowerCase().trim();
 
-    if (validToken && validScope && notExpired) {
+    if (
+      validToken &&
+      validScope &&
+      String(row[emailIdx]).toLowerCase().trim() === normEmail &&
+      notExpired
+    ) {
       sheet.getRange(i + 1, verifiedIdx + 1).setValue(true);
 
-      const email = String(row[emailIdx]).toLowerCase().trim();
-
+      
       const redirectUrl =
         "https://localhost:4321/exemption" +
         "?verified=1" +
@@ -495,11 +500,11 @@ function isValidVerificationSession(email, token, scope) {
   const verifiedIdx = headers.indexOf("verified");
   const expiresIdx = headers.indexOf("expires_at");
 
-  const normalizedEmail = String(email || "").toLowerCase().trim();
+  const normEmail = String(email || "").toLowerCase().trim();
 
   return data.slice(1).some((row) => {
     return (
-      String(row[emailIdx]).toLowerCase().trim() === normalizedEmail &&
+      String(row[emailIdx]).toLowerCase().trim() === normEmail &&
       row[tokenIdx] === token &&
       row[scopeIdx] === scope &&
       String(row[verifiedIdx]).toUpperCase() === "TRUE" &&

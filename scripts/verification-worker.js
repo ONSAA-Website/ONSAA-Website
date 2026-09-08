@@ -1,3 +1,5 @@
+// CF worker for verification to proxy appscript link
+
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzER3j3__BhPZPQXMEVcipD58Gay-jOa0ET5Evb5tDQs9XCxnciV4eS0N3_X6ScnTfPhQ/exec";
 const APP_ORIGIN = "http://localhost:4321"; 
 
@@ -16,34 +18,74 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders });
     }
 
-    if (path === "/exemption/verify") {
+    // don't auto-verify on click (link scanners)
+    if (path === "/exemption/verify" && request.method === "GET") {
       const token = url.searchParams.get("token");
       const email = url.searchParams.get("email");
-      if (!token || !email) {
-        return new Response("Missing token", { status: 400, headers: corsHeaders });
+      const scope = url.searchParams.get("scope");
+
+      if (!token || !email || !scope) {
+        return new Response("Invalid verification link.", { status: 400 });
       }
 
-      const verifyUrl = APPS_SCRIPT_URL + "?action=verify-email&token=" + encodeURIComponent(token);
-      await fetch(verifyUrl);
-
-      const redirectUrl = APP_ORIGIN + "/exemption?verified=1&token=" + encodeURIComponent(token) + "&email=" + encodeURIComponent(email) + "&scope=" + encodeURIComponent(scope);
+      const confirmUrl =
+        "/exemption/confirm" +
+        "?token=" + encodeURIComponent(token) +
+        "&email=" + encodeURIComponent(email) +
+        "&scope=" + encodeURIComponent(scope);
 
       return new Response(`
-        <!DOCTYPE html>
+        <!doctype html>
         <html>
           <head>
             <meta charset="utf-8">
-            <title>Email verified</title>
-            <meta http-equiv="refresh" content="0;url=${redirectUrl}">
+            <title>Confirm email verification</title>
           </head>
           <body>
-            <p>Email verified successfully.</p>
-            <p>Redirecting to the form…</p>
+            <h1>Confirm your email</h1>
+            <p>Click the button below to finish verifying your email address.</p>
+            <form method="POST" action="${confirmUrl}">
+              <button type="submit">Confirm email</button>
+            </form>
           </body>
         </html>
       `, {
-        headers: { "Content-Type": "text/html", ...corsHeaders },
+        headers: { "Content-Type": "text/html; charset=UTF-8" }
       });
+    }
+
+    if (path === "/exemption/confirm" && request.method === "POST") {
+      const token = url.searchParams.get("token");
+      const email = url.searchParams.get("email");
+      const scope = url.searchParams.get("scope");
+
+      if (!token || !email || !scope) {
+        return new Response("Invalid verification request.", { status: 400 });
+      }
+
+      const verifyUrl =
+        APPS_SCRIPT_URL +
+        "?action=verify-email" +
+        "&token=" + encodeURIComponent(token) +
+        "&email=" + encodeURIComponent(email) +
+        "&scope=" + encodeURIComponent(scope);
+
+      const verified = await fetch(verifyUrl);
+
+      if (!verified.ok) {
+        return new Response("Could not verify this email. Request a new link.", {
+          status: 500
+        });
+      }
+
+      const redirectUrl =
+        APP_ORIGIN +
+        "/exemption?verified=1" +
+        "&email=" + encodeURIComponent(email) +
+        "&token=" + encodeURIComponent(token) +
+        "&scope=" + encodeURIComponent(scope);
+
+      return Response.redirect(redirectUrl, 303);
     }
 
     // proxy to Apps Script

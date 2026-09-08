@@ -487,9 +487,9 @@ const ALLOWED_DOMAINS = [
 
         if (json.verified) {
           // starting one hour session; limited sessions increase security and reduce email sends
-          sessionStorage.setItem("verifiedEmail", email);
-          sessionStorage.setItem("verificationToken", token);
-          sessionStorage.setItem("verificationScope", scope);
+          localStorage.setItem("verifiedEmail", email);
+          localStorage.setItem("verificationToken", token);
+          localStorage.setItem("verificationScope", scope);
 
           window.verifiedUserEmail = email;
 
@@ -933,10 +933,10 @@ const ALLOWED_DOMAINS = [
       const payload = Object.fromEntries(formData.entries());
 
       payload.submitter_email =
-        sessionStorage.getItem("verifiedEmail");
+        localStorage.getItem("verifiedEmail");
 
       payload.verification_token =
-        sessionStorage.getItem("verificationToken");
+        localStorage.getItem("verificationToken");
 
       payload.course_code = selectedReportCourse.code;
       payload.course_name = selectedReportCourse.name;
@@ -994,9 +994,9 @@ const ALLOWED_DOMAINS = [
           body: JSON.stringify({
             email,
             scope: "submit",
-            existing_email: sessionStorage.getItem("verifiedEmail"),
-            existing_token: sessionStorage.getItem("verificationToken"),
-            existing_scope: sessionStorage.getItem("verificationScope")
+            existing_email: localStorage.getItem("verifiedEmail"),
+            existing_token: localStorage.getItem("verificationToken"),
+            existing_scope: localStorage.getItem("verificationScope")
           })
         });
 
@@ -1040,9 +1040,9 @@ const ALLOWED_DOMAINS = [
           body: JSON.stringify({
             email,
             scope: "report",
-            existing_email: sessionStorage.getItem("verifiedEmail"),
-            existing_token: sessionStorage.getItem("verificationToken"),
-            existing_scope: sessionStorage.getItem("verificationScope")
+            existing_email: localStorage.getItem("verifiedEmail"),
+            existing_token: localStorage.getItem("verificationToken"),
+            existing_scope: localStorage.getItem("verificationScope")
           })
         });
 
@@ -1200,8 +1200,8 @@ const ALLOWED_DOMAINS = [
       const formData = new FormData(exemptionForm);
       const payload = Object.fromEntries(formData.entries());
 
-      payload.submitter_email = sessionStorage.getItem("verifiedEmail");
-      payload.verification_token = sessionStorage.getItem("verificationToken");
+      payload.submitter_email = localStorage.getItem("verifiedEmail");
+      payload.verification_token = localStorage.getItem("verificationToken");
       payload.vow = document.getElementById("vow").checked;
 
       submitStatus.textContent = "Submitting...";
