@@ -197,6 +197,85 @@ const ALLOWED_DOMAINS = [
           </form>
           <p id="submit-status" class="status"></p>
         </div>
+
+        <div
+          id="announcement-template"
+          style="
+            display: none;
+            position: relative;
+            margin-top: 18px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.04);
+          "
+        >
+          <button
+            id="copy-announcement-template"
+            type="button"
+            aria-label="Copy announcement template"
+            title="Copy template"
+            style="
+              position: absolute;
+              top: 12px;
+              right: 12px;
+              width: 36px;
+              height: 36px;
+              display: grid;
+              place-items: center;
+              padding: 0;
+              border: 1px solid rgba(255, 255, 255, 0.18);
+              border-radius: 7px;
+              background: rgba(255, 255, 255, 0.06);
+              color: #ffffff;
+              cursor: pointer;
+            "
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+
+          <h2 style="margin: 0 42px 10px 0; font-size: 1.1rem;">
+            Announcement Template
+          </h2>
+          <p id="announcement-sharing-info">Copy this announcement template to share this exemption via your indicated channels: </p>
+
+          <pre
+            id="announcement-template-text"
+            style="
+              margin: 0;
+              padding: 14px;
+              overflow-x: auto;
+              white-space: pre-wrap;
+              overflow-wrap: break-word;
+              border-radius: 6px;
+              background: rgba(0, 0, 0, 0.28);
+              color: rgba(255, 255, 255, 0.9);
+              font-family: inherit;
+              font-size: 0.95rem;
+              line-height: 1.55;
+            "
+          ></pre>
+
+          <p
+            id="announcement-copy-status"
+            class="status"
+            aria-live="polite"
+            style="margin: 10px 0 0;"
+          ></p>
+        </div>
       </div>
 
       <div id="tab-report" class="tab-content">
@@ -334,6 +413,44 @@ const ALLOWED_DOMAINS = [
     const reportStatus = document.getElementById("report-status");
     const reporterEmailInput = document.getElementById("submitter_email");
     const reasonSelect = document.getElementById("reason_select");
+
+    const sharingInfo = document.getElementById("announcement-sharing-info");
+
+    const ANNOUNCEMENT_TEMPLATE = `Hi all, 
+
+      As I assume most in this class are aware, the Ford government has introduced cuts to OSAP for domestic students, and has uncapped tuition fees for international students. Students Against Austerity, a grassroots student organization that formed to fight Ford's austerity policies, is encouraging students and workers to participate in a strike action to protest the cuts to education on November 5th, 2026. To show my solidarity with this action and encourage participation, I am granting all students in this section an academic exemption for the strike date:
+
+      Detail: Nov 5 lecture moved to online/recorded; pre-class quiz canceled/extended; midterm test postponed to MM/DD
+
+      I encourage all of you to participate in this strike and look forward to further actions organized by Students Against Austerity.`;
+
+
+    const announcementTemplateBox = document.getElementById("announcement-template");
+    const announcementTemplateText = document.getElementById("announcement-template-text");
+    const copyAnnouncementButton = document.getElementById("copy-announcement-template");
+    const announcementCopyStatus = document.getElementById("announcement-copy-status");
+    const copyIcon = copyAnnouncementButton.innerHTML;
+
+    announcementTemplateText.textContent = ANNOUNCEMENT_TEMPLATE;
+
+    copyAnnouncementButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(ANNOUNCEMENT_TEMPLATE);
+
+        announcementCopyStatus.textContent = "Template copied.";
+        announcementCopyStatus.className = "status success";
+
+        copyAnnouncementButton.innerHTML = "✓";
+        copyAnnouncementButton.setAttribute("aria-label", "Template copied");
+
+        setTimeout(() => {
+          copyAnnouncementButton.innerHTML = copyIcon;
+        }, 1500);
+      } catch (err) {
+        announcementCopyStatus.textContent = "Could not copy automatically. Select and copy the text manually.";
+        announcementCopyStatus.className = "status error";
+      }
+    });
 
     // Build static allowlist for submit form
     searchableInstitutions = ALLOWED_INSTITUTIONS.map(name => ({
@@ -1016,7 +1133,7 @@ const ALLOWED_DOMAINS = [
           return;
         }
 
-        verifyStatus.textContent = "Verification email sent. Please check your inbox and click the link.\nIf you don't see the email, wait a few minutes and check your junk/spam folder before making another request.";
+        verifyStatus.innerText = "Verification email sent. Please check your inbox and click the link.\nIf you don't see the email, wait a few minutes and check your junk/spam folder before making another request.";
         verifyStatus.className = "status success";
       } catch (err) {
         console.error(err);
@@ -1226,10 +1343,18 @@ const ALLOWED_DOMAINS = [
           submitStatus.className = "status error";
           return;
         }
-
         submitStatus.textContent = "Exemption submitted successfully.";
         submitStatus.className = "status success";
         exemptionForm.reset();
+
+        // clear page and show draft
+        submitStep.style.display = "none";
+        announcementTemplateBox.style.display = "block";
+        sharingInfo.textContent =
+          "Copy this announcement template to share this exemption via: " +
+          (payload.info || "your indicated channels") +
+          ".";
+
       } catch (err) {
         console.error("Submission failed:", err);
         submitStatus.textContent = "Failed to submit exemption.";
