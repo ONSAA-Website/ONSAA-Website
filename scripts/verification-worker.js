@@ -1,5 +1,3 @@
-// CF worker for verification to proxy appscript link
-
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzER3j3__BhPZPQXMEVcipD58Gay-jOa0ET5Evb5tDQs9XCxnciV4eS0N3_X6ScnTfPhQ/exec";
 const APP_ORIGIN = "http://localhost:4321"; 
 
@@ -41,12 +39,87 @@ export default {
             <meta charset="utf-8">
             <title>Confirm email verification</title>
           </head>
-          <body>
-            <h1>Confirm your email</h1>
-            <p>Click the button below to finish verifying your email address.</p>
-            <form method="POST" action="${confirmUrl}">
-              <button type="submit">Confirm email</button>
-            </form>
+          <body style="
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            box-sizing: border-box;
+            background: #0a0a0a;
+            color: #ffffff;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          ">
+            <main style="
+              width: 100%;
+              max-width: 560px;
+              box-sizing: border-box;
+              padding: 28px;
+              background: rgba(255, 255, 255, 0.04);
+              border: 1px solid rgba(255, 255, 255, 0.14);
+              border-radius: 10px;
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            ">
+              <p style="
+                margin: 0 0 8px;
+                color: rgba(255, 59, 48, 0.95);
+                font-size: 0.85rem;
+                font-weight: 700;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+              ">
+                Academic Exemption Database
+              </p>
+
+              <h1 style="
+                margin: 0 0 10px;
+                font-size: 1.5rem;
+                line-height: 1.25;
+                color: #ffffff;
+              ">
+                Confirm your email
+              </h1>
+
+              <p style="
+                margin: 0 0 24px;
+                color: rgba(255, 255, 255, 0.85);
+                font-size: 0.95rem;
+                line-height: 1.5;
+              ">
+                Click below to finish verifying your institutional email address.
+              </p>
+
+              <form method="POST" action="${confirmUrl}" style="margin: 0;">
+                <button
+                  type="submit"
+                  style="
+                    appearance: none;
+                    width: 100%;
+                    padding: 11px 16px;
+                    border: 0;
+                    border-radius: 6px;
+                    background: rgba(255, 59, 48, 0.85);
+                    color: #ffffff;
+                    font: inherit;
+                    font-size: 0.95rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                  "
+                >
+                  Confirm email
+                </button>
+              </form>
+
+              <p style="
+                margin: 18px 0 0;
+                color: rgba(255, 255, 255, 0.6);
+                font-size: 0.8rem;
+                line-height: 1.45;
+              ">
+                If you did not request this verification, you can close this page.
+              </p>
+            </main>
           </body>
         </html>
       `, {
