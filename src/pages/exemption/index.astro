@@ -161,7 +161,7 @@ const ALLOWED_DOMAINS = [
           <h2>Submit academic exemption</h2>
           <form id="exemption-form">
             <label for="institution">Institution</label>
-            <div class="autocomplete-wrap">
+            <div class="autocomplete-wrap institution-wrap">
               <input
                 type="text"
                 id="institution"
@@ -170,13 +170,22 @@ const ALLOWED_DOMAINS = [
                 placeholder="Start typing your institution..."
                 autocomplete="off"
               />
-              <p id="institution-status" class="institution-status"></p>
+
               <div id="institution-results" class="autocomplete-results"></div>
             </div>
-            <input type="hidden" id="institution-id" name="institution_id" required />
 
-            <label for="course_code">Course code</label>
-            <input type="text" id="course_code" name="course_code" required placeholder="e.g. CS 101" />
+            <p
+              id="institution-status"
+              class="institution-status"
+              aria-live="polite"
+            ></p>
+
+            <input type="hidden" id="institution-id" name="institution_id" required>
+
+            <div style="margin-top: 4px;">
+              <label for="course_code">Course code</label>
+              <input type="text" id="course_code" name="course_code" required placeholder="e.g. CS 101" />
+            </div>
 
             <label for="course_name">Course name</label>
             <input type="text" id="course_name" name="course_name" required />
@@ -230,7 +239,7 @@ const ALLOWED_DOMAINS = [
         </div>
         </div>
 
-        <p id="submit-success-message" class="status success" style="display: none">Submission successful!</p>
+        <p id="submit-success-message" class="status success" style="display: none;">Submission successful!</p>
         <div
           id="submit-template-view"
           style="
@@ -1616,6 +1625,22 @@ const ALLOWED_DOMAINS = [
       padding: 40px;
       gap: 12px;
       font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .institution-wrap #institution {
+      margin-bottom: 0;
+    }
+
+    #institution-status {
+      min-height: 0;
+      margin: 4px 0 0;
+      font-size: 0.85rem;
+      line-height: 1.35;
+      color: #ffffffec;
+    }
+
+    #institution-status:not(:empty) {
+      margin-bottom: 14px;
     }
 
     .loading-overlay {
