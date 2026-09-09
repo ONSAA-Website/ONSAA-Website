@@ -1199,7 +1199,7 @@ const ALLOWED_DOMAINS = [
           return;
         }
 
-        verifyStatus.innerText = "Verification email sent. Please check your inbox and click the link.\nIf you don't see the email, wait a few minutes and check your junk/spam folder before making another request.";
+        verifyStatus.innerText = "Verification email sent. \nIf you don't see the email, wait a few minutes and check your junk/spam folder before making another request.";
         verifyStatus.className = "status success";
       } catch (err) {
         console.error(err);
@@ -1252,7 +1252,7 @@ const ALLOWED_DOMAINS = [
           return;
         }
 
-        reportVerifyStatus.textContent = "Verification email sent. Please check your inbox and click the link.\nIf you don't see the email, wait a few minutes and check your junk/spam folder before making another request.";
+        reportVerifyStatus.innerText = "Verification email sent. \nIf you don't see the email, wait a few minutes and check your junk/spam folder before making another request.";
         reportVerifyStatus.className = "status success";
       } catch (err) {
         console.error(err);
