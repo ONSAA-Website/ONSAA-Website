@@ -106,6 +106,36 @@ const ALLOWED_DOMAINS = [
       </div>
 
       <div id="tab-submit" class="tab-content">
+        <div
+          id="submit-subtabs"
+          class="submit-subtabs"
+          style="
+            display: flex;
+            gap: 14px;
+            margin: 0 0 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+          "
+        >
+          <button
+            id="submit-subtab-btn"
+            type="button"
+            class="submit-subtab active"
+            data-submit-view="form"
+          >
+            Form
+          </button>
+
+          <button
+            id="template-subtab-btn"
+            type="button"
+            class="submit-subtab"
+            data-submit-view="template"
+          >
+            Announcement Template
+          </button>
+        </div>
+
+        <div id="submit-form-view">
         <div id="verify-step">
           <h2>Submit exemptions for your classes and/or assessments</h2>
           <p class="intro">
@@ -198,9 +228,11 @@ const ALLOWED_DOMAINS = [
           </form>
           <p id="submit-status" class="status"></p>
         </div>
+        </div>
 
+        <p id="submit-success-message" class="status success" style="display: none">Submission successful!</p>
         <div
-          id="announcement-template"
+          id="submit-template-view"
           style="
             display: none;
             position: relative;
@@ -415,6 +447,7 @@ const ALLOWED_DOMAINS = [
     const reporterEmailInput = document.getElementById("submitter_email");
     const reasonSelect = document.getElementById("reason_select");
 
+    const templateTab = document.getElementById("template-subtab-btn");
     const sharingInfo = document.getElementById("announcement-sharing-info");
 
     const ANNOUNCEMENT_TEMPLATE = `Hi all, 
@@ -433,6 +466,29 @@ const ALLOWED_DOMAINS = [
     const copyIcon = copyAnnouncementButton.innerHTML;
 
     announcementTemplateText.textContent = ANNOUNCEMENT_TEMPLATE;
+
+    const submitSubtabButtons = document.querySelectorAll(".submit-subtab");
+    const submitFormView = document.getElementById("submit-form-view");
+    const submitTemplateView = document.getElementById("submit-template-view");
+
+    function openSubmitSubtab(viewName) {
+      submitSubtabButtons.forEach((button) => {
+        button.classList.toggle(
+          "active",
+          button.dataset.submitView === viewName
+        );
+      });
+
+      submitFormView.style.display = viewName === "form" ? "block" : "none";
+      submitTemplateView.style.display =
+        viewName === "template" ? "block" : "none";
+    }
+
+    submitSubtabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        openSubmitSubtab(button.dataset.submitView);
+      });
+    });
 
     copyAnnouncementButton.addEventListener("click", async () => {
       try {
@@ -1348,14 +1404,18 @@ const ALLOWED_DOMAINS = [
         submitStatus.className = "status success";
         exemptionForm.reset();
 
-        // clear page and show draft
+        /* clear page and show draft
         submitStep.style.display = "none";
         announcementTemplateBox.style.display = "block";
         sharingInfo.textContent =
           "Copy this announcement template to share this exemption via: " +
           (payload.info || "your indicated channels") +
           ".";
-
+        */
+        openSubmitSubtab("template");
+        
+        // make success message visible
+        document.getElementById("submit-success-message").style.display = "block";
       } catch (err) {
         console.error("Submission failed:", err);
         submitStatus.textContent = "Failed to submit exemption.";
@@ -1666,6 +1726,36 @@ const ALLOWED_DOMAINS = [
       border-top-color: #3b82f6;
       border-radius: 50%;
       animation: spin 0.8s infinite linear;
+    }
+
+    .submit-subtabs {
+      display: flex;
+      gap: 18px;
+      margin: 0 0 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .submit-subtab {
+      appearance: none;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #ffffff;
+      padding: 8px 4px 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity 150ms ease, border-color 150ms ease;
+    }
+
+    .submit-subtab:hover {
+      opacity: 1;
+    }
+
+    .submit-subtab.active {
+      opacity: 1;
+      border-bottom-color: rgba(255, 59, 48, 0.95);
     }
 
     .loading-overlay {
