@@ -568,7 +568,7 @@ function isValidVerificationSession(email, sessionToken, scope) {
   const sessionTokenIdx = headers.indexOf("session_token");
   const sessionExpiresIdx = headers.indexOf("session_expires_at");
 
-  const normEmail = String(email || "").toLowerCase().trim();
+  const normalizedEmail = String(email || "").toLowerCase().trim();
 
   return data.slice(1).some((row) => {
     return (
