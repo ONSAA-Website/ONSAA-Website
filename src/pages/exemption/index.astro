@@ -137,10 +137,10 @@ const ALLOWED_DOMAINS = [
 
         <div id="submit-form-view">
         <div id="verify-step">
-          <h2>Submit exemptions for your classes and/or assessments</h2>
+          <h2>Submit exemptions for your classes</h2>
           <p class="intro">
             Verified instructors can submit exemptions for their courses.<br>
-            All submissions will be admin-reviewed. Please ensure you submit correct information.
+            ⓘ All submissions will be admin-reviewed. Please ensure you submit correct information.
           </p>
           <h2>Verify your institutional email</h2>
           <form id="verify-form">
@@ -159,6 +159,9 @@ const ALLOWED_DOMAINS = [
 
         <div id="submit-step" style="display:none;">
           <h2>Submit academic exemption</h2>
+          <p class="intro">
+            ⓘ All submissions will be admin-reviewed. Please ensure you submit correct information.
+          </p>
           <form id="exemption-form">
             <label for="institution">Institution</label>
             <div class="autocomplete-wrap institution-wrap">
@@ -642,98 +645,58 @@ const ALLOWED_DOMAINS = [
     }
 
     // listen for verification messages from Apps Script
-
-    window.verifiedUserEmail = ""; // global email var
     // on page load, check for verification redirect params
-    (async function handleVerificationRedirect() {
+    (function handleVerificationRedirect() {
       const params = new URLSearchParams(window.location.search);
       const verifiedFlag = params.get("verified");
-      const token = params.get("token");
-      const email = params.get("email");
-      const scope = params.get("scope") || "submit"; // ← add this
+      const scope = params.get("scope") || "submit";
 
-      if (verifiedFlag !== "1" || !token) {
+      if (verifiedFlag !== "1") return;
+
+      window.history.replaceState(
+        {},
+        "",
+        window.location.pathname
+      );
+
+      if (scope === "report") {
+        tabBtns.forEach((button) => {
+          button.classList.toggle(
+            "active",
+            button.dataset.tab === "report"
+          );
+        });
+
+        tabBrowse.classList.remove("active");
+        tabSubmit.classList.remove("active");
+        tabReport.classList.add("active");
+
+        reportVerifyStep.style.display = "none";
+        reportSubmitStep.style.display = "block";
+
+        reportVerifyStatus.textContent =
+          "Email verified. You may now submit a report.";
+        reportVerifyStatus.className = "status success";
         return;
       }
 
-      try {
-        const res = await fetch(
-          APPS_SCRIPT_URL +
-            "?action=check-token&token=" +
-            encodeURIComponent(token) +
-            "&email=" +
-            encodeURIComponent(email) + 
-            "&scope=" + 
-            encodeURIComponent(scope)
+      tabBtns.forEach((button) => {
+        button.classList.toggle(
+          "active",
+          button.dataset.tab === "submit"
         );
-        const json = await res.json();
+      });
 
-        if (json.verified) {
-          // starting one hour session; limited sessions increase security and reduce email sends
-          localStorage.setItem("verifiedEmail", email);
-          localStorage.setItem("verificationToken", token);
-          localStorage.setItem("verificationScope", scope);
+      tabBrowse.classList.remove("active");
+      tabSubmit.classList.add("active");
+      tabReport.classList.remove("active");
 
-          window.verifiedUserEmail = email;
+      verifyStep.style.display = "none";
+      submitStep.style.display = "block";
 
-          const isReportVerification = scope === "report";
-
-          if (isReportVerification) {
-            // Activate Report tab
-            tabBtns.forEach((button) => {
-              button.classList.toggle(
-                "active",
-                button.dataset.tab === "report"
-              );
-            });
-
-            tabBrowse.classList.remove("active");
-            tabSubmit.classList.remove("active");
-            tabReport.classList.add("active");
-
-            reportVerifyStep.style.display = "none";
-            reportSubmitStep.style.display = "block";
-
-            const reporterEmailInput = document.getElementById("submitter_email");
-            if (reporterEmailInput) {
-              reporterEmailInput.value = email;
-              reporterEmailInput.placeholder = email;
-            }
-          } else {
-            // Activate Submit tab (default)
-            tabBtns.forEach((button) => {
-              button.classList.toggle(
-                "active",
-                button.dataset.tab === "submit"
-              );
-            });
-
-            tabBrowse.classList.remove("active");
-            tabSubmit.classList.add("active");
-            tabReport.classList.remove("active");
-
-            verifyStep.style.display = "none";
-            submitStep.style.display = "block";
-
-            const submitterEmailInput = document.getElementById("submitter_email");
-            if (submitterEmailInput) {
-              submitterEmailInput.value = email;
-              submitterEmailInput.placeholder = email;
-            }
-          }
-
-          verifyStatus.textContent = "Email verified. You may now submit your claim.";
-          verifyStatus.className = "status success";
-        } else {
-          verifyStatus.textContent =
-            "Verification could not be confirmed. Please request a new verification email.";
-          verifyStatus.className = "status error";
-        }
-      } catch (err) {
-        console.error("Verification check failed:", err);
-        verifyStatus.textContent = "Failed to confirm verification.";
-        verifyStatus.className = "status error";
-      }
+      verifyStatus.textContent =
+        "Email verified. You may now submit your claim.";
+      verifyStatus.className = "status success";
     })();
 
     // Handle verification signal URL
@@ -746,10 +709,6 @@ const ALLOWED_DOMAINS = [
       if (signal !== "1" || !email || !token) {
         return;
       }
-
-      // Write to localStorage as signal
-      localStorage.setItem("exemption_verified_email", email);
-      localStorage.setItem("exemption_verified_token", token);
 
       // Clear URL
       if (window.history && window.history.replaceState) {
@@ -1115,12 +1074,6 @@ const ALLOWED_DOMAINS = [
       const formData = new FormData(reportForm);
       const payload = Object.fromEntries(formData.entries());
 
-      payload.submitter_email =
-        localStorage.getItem("verifiedEmail");
-
-      payload.verification_token =
-        localStorage.getItem("verificationToken");
-
       payload.course_code = selectedReportCourse.code;
       payload.course_name = selectedReportCourse.name;
       payload.institution = selectedReportCourse.institution;
@@ -1133,6 +1086,7 @@ const ALLOWED_DOMAINS = [
           APPS_SCRIPT_URL + "?action=report-submission",
           {
             method: "POST",
+            credentials: "include",
             headers: {
               "Content-Type": "application/json;charset=utf-8",
             },
@@ -1176,10 +1130,7 @@ const ALLOWED_DOMAINS = [
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
             email,
-            scope: "submit",
-            existing_email: localStorage.getItem("verifiedEmail"),
-            existing_token: localStorage.getItem("verificationToken"),
-            existing_scope: localStorage.getItem("verificationScope")
+            scope: "submit"
           })
         });
 
@@ -1222,10 +1173,7 @@ const ALLOWED_DOMAINS = [
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
             email,
-            scope: "report",
-            existing_email: localStorage.getItem("verifiedEmail"),
-            existing_token: localStorage.getItem("verificationToken"),
-            existing_scope: localStorage.getItem("verificationScope")
+            scope: "report"
           })
         });
 
@@ -1242,11 +1190,7 @@ const ALLOWED_DOMAINS = [
           reportVerifyStatus.className = "status success";
           reportVerifyStep.style.display = "none";
           reportSubmitStep.style.display = "block";
-
-          // Set global verified email if not set yet
-          if (!window.verifiedUserEmail) {
-            window.verifiedUserEmail = email;
-          }
+          
           reporterEmailInput.value = window.verifiedUserEmail;
           reporterEmailInput.placeholder = window.verifiedUserEmail;
           return;
@@ -1383,8 +1327,6 @@ const ALLOWED_DOMAINS = [
       const formData = new FormData(exemptionForm);
       const payload = Object.fromEntries(formData.entries());
 
-      payload.submitter_email = localStorage.getItem("verifiedEmail");
-      payload.verification_token = localStorage.getItem("verificationToken");
       payload.vow = document.getElementById("vow").checked;
 
       submitStatus.textContent = "Submitting...";
@@ -1394,6 +1336,7 @@ const ALLOWED_DOMAINS = [
         console.log("Submitting to:", APPS_SCRIPT_URL + "?action=submit-exemption");
         const res = await fetch(APPS_SCRIPT_URL + "?action=submit-exemption", {
           method: "POST",
+          credentials: "include",
           headers: { "Content-Type": "application/json;charset=utf-8" },
           body: JSON.stringify(payload)
         });

@@ -97,13 +97,14 @@ function handleListExemptions() {
   }
 
   const headers = data[0];
-  const items = data.slice(1).map(row => {
-    const obj = {};
-    headers.forEach((h, i) => {
-      obj[h] = row[i];
-    });
-    return obj;
-  });
+  const items = data.slice(1).map((row) => ({
+    institution: row[headers.indexOf("institution")] || "",
+    course_code: row[headers.indexOf("course_code")] || "",
+    course_name: row[headers.indexOf("course_name")] || "",
+    exemption_type: row[headers.indexOf("exemption_type")] || "",
+    description: row[headers.indexOf("description")] || "",
+    info: row[headers.indexOf("info")] || ""
+  }));
 
   return jsonResp({ items });
 }
@@ -124,7 +125,7 @@ function handleReport(e) {
     const token = String(params.verification_token || "");
     if (!isValidVerificationSession(email, token, "report")) {
       return jsonResp(
-        { error: "Your verification session has expired. Please verify your email again." },
+        { error: "Your verification session has expired. Please refresh the page and verify your email again." },
         403
       );
     }
@@ -500,11 +501,11 @@ function isValidVerificationSession(email, token, scope) {
   const verifiedIdx = headers.indexOf("verified");
   const expiresIdx = headers.indexOf("expires_at");
 
-  const normEmail = String(email || "").toLowerCase().trim();
+  const normalizedEmail = String(email || "").toLowerCase().trim();
 
   return data.slice(1).some((row) => {
     return (
-      String(row[emailIdx]).toLowerCase().trim() === normEmail &&
+      String(row[emailIdx]).toLowerCase().trim() === normalizedEmail &&
       row[tokenIdx] === token &&
       row[scopeIdx] === scope &&
       String(row[verifiedIdx]).toUpperCase() === "TRUE" &&
