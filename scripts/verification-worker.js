@@ -1,6 +1,12 @@
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzER3j3__BhPZPQXMEVcipD58Gay-jOa0ET5Evb5tDQs9XCxnciV4eS0N3_X6ScnTfPhQ/exec";
 const APP_ORIGIN = "http://localhost:4321"; 
 
+function isTrustedOrigin(request) {
+  const origin = request.headers.get("Origin");
+
+  return origin === APP_ORIGIN;
+}
+
 export default {
   async fetch(request) {
     const url = new URL(request.url);
@@ -201,6 +207,20 @@ export default {
         url.searchParams.get("action") === "report-submission"
       )
     ) {
+
+      if (!isTrustedOrigin(request)) {
+        return new Response(
+          JSON.stringify({ error: "Blocked cross-site request." }),
+          {
+            status: 403,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders
+            }
+          }
+        );
+      }
+
       const cookieHeader = request.headers.get("Cookie") || "";
 
       const match = cookieHeader.match(
