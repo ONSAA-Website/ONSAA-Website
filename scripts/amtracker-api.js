@@ -56,6 +56,16 @@ function hasValidInternalSecret(e) {
 }
 
 
+// preventing formula injections
+function sanitizeCell(value) {
+  const text = String(value ?? "");
+  if (/^[=+\-@\t\r]/.test(text)) {
+    return "'" + text;
+  }
+  return text;
+}
+
+
 // entry point for POST requests
 function doPost(e) {
   // prevent direct exec
@@ -168,7 +178,7 @@ function handleReport(e) {
       return jsonResp({ error: limit.error }, 429);
     }
     
-    const rowData = headers.map(h => row[h] ?? "");
+    const rowData = headers.map(h => sanitizeCell(row[h]));
 
     sheet.appendRow(rowData);
 
@@ -227,7 +237,7 @@ function handleSubmitExemption(e) {
       return jsonResp({ error: limit.error }, 429);
     }
 
-    const rowData = headers.map(h => row[h] ?? "");
+    const rowData = headers.map(h => sanitizeCell(row[h]));
 
     sheet.appendRow(rowData);
 
