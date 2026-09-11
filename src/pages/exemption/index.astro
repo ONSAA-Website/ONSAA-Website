@@ -648,10 +648,7 @@ const ALLOWED_DOMAINS = [
     // on page load, check for verification redirect params
     (function handleVerificationRedirect() {
       const params = new URLSearchParams(window.location.search);
-      const verifiedFlag = params.get("verified");
-      const scope = params.get("scope") || "submit";
-
-      if (verifiedFlag !== "1") return;
+      const scope = params.get("scope") || "submit"; // not a credential; only used to choose tab
 
       window.history.replaceState(
         {},
@@ -699,29 +696,6 @@ const ALLOWED_DOMAINS = [
       verifyStatus.className = "status success";
     })();
 
-    // Handle verification signal URL
-    (function handleVerifySignal() {
-      const params = new URLSearchParams(window.location.search);
-      const signal = params.get("signal-verify");
-      const email = params.get("email");
-      const token = params.get("token");
-
-      if (signal !== "1" || !email || !token) {
-        return;
-      }
-
-      // Clear URL
-      if (window.history && window.history.replaceState) {
-        window.history.replaceState({}, "", window.location.pathname + window.location.hash);
-      }
-
-      // Try to close if this is a popup (verification tab)
-      setTimeout(() => {
-        if (window.opener && !window.opener.closed) {
-          window.close();
-        }
-      }, 300);
-    })();
 
     function clearStatus(element) {
       element.textContent = "";
@@ -1033,13 +1007,6 @@ const ALLOWED_DOMAINS = [
     reportForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      if (!window.verifiedUserEmail) {
-        reportStatus.textContent =
-          "You must verify your institutional email before submitting a report.";
-        reportStatus.className = "status error";
-        return;
-      }
-
       if (!selectedReportCourse) {
         reportCourseStatus.textContent =
           "Please select an exemption from the search results.";
@@ -1191,8 +1158,8 @@ const ALLOWED_DOMAINS = [
           reportVerifyStep.style.display = "none";
           reportSubmitStep.style.display = "block";
           
-          reporterEmailInput.value = window.verifiedUserEmail;
-          reporterEmailInput.placeholder = window.verifiedUserEmail;
+          reporterEmailInput.value = reportVerifyEmailInput.value.trim();
+          reporterEmailInput.placeholder = reportVerifyEmailInput.value.trim();
           return;
         }
 
