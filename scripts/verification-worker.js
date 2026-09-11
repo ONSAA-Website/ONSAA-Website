@@ -7,8 +7,14 @@ function isTrustedOrigin(request) {
   return origin === APP_ORIGIN;
 }
 
+function appsScriptUrl(url, env) {
+  const target = new URL(APPS_SCRIPT_URL + url.search);
+  target.searchParams.set("internal_secret", env.INTERNAL_SECRET);
+  return target.toString();
+}
+
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -148,9 +154,10 @@ export default {
         "?action=verify-email" +
         "&token=" + encodeURIComponent(token) +
         "&email=" + encodeURIComponent(email) +
-        "&scope=" + encodeURIComponent(scope);
+        "&scope=" + encodeURIComponent(scope) +
+        "&internal_secret=" + encodeURIComponent(env.INTERNAL_SECRET);
 
-      const verified = await fetch(verifyUrl);
+      const verified = await fetch(verifyUrl.toString());
       const verifiedText = await verified.text();
 
       let verificationResult;
@@ -281,7 +288,7 @@ export default {
       body.submitter_email = session.email;
       body.verification_token = session.token;
 
-      const response = await fetch(APPS_SCRIPT_URL + url.search, {
+      const response = await fetch(appsScriptUrl(url, env), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -300,7 +307,7 @@ export default {
     }
 
     // proxy to Apps Script
-    const targetUrl = APPS_SCRIPT_URL + url.search;
+    const targetUrl = appsScriptUrl(url, env);
 
     const init = {
       method: request.method,

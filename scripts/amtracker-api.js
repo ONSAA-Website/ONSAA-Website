@@ -39,8 +39,30 @@ const ALLOWED_DOMAINS = [
   "emilycarr.ca"
 ];
 
+
+const INTERNAL_SECRET =
+  PropertiesService.getScriptProperties()
+    .getProperty("INTERNAL_SECRET");
+
+
+function hasValidInternalSecret(e) {
+  const supplied = String(e.parameter.internal_secret || "");
+
+  return (
+    INTERNAL_SECRET &&
+    supplied &&
+    supplied === INTERNAL_SECRET
+  );
+}
+
+
 // entry point for POST requests
 function doPost(e) {
+  // prevent direct exec
+  if (!hasValidInternalSecret(e)) {
+    return jsonResp({ error: "Unauthorized" });
+  }
+
   const action = e.parameter.action;
 
   if (action === "request-verify") {
@@ -60,6 +82,11 @@ function doPost(e) {
 
 // entry point for GET requests
 function doGet(e) {
+  // prevent direct exec
+  if (!hasValidInternalSecret(e)) {
+    return jsonResp({ error: "Unauthorized" });
+  }
+  
   const action = e.parameter.action;
   const token = e.parameter.token;
   const email = e.parameter.email;
