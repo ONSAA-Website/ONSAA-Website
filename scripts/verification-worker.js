@@ -13,6 +13,12 @@ function appsScriptUrl(url, env) {
   return target.toString();
 }
 
+function isTrustedOrigin(request) {
+  const origin = request.headers.get("Origin");
+
+  return origin === APP_ORIGIN;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
