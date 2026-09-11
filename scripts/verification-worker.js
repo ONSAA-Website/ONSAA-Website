@@ -19,6 +19,12 @@ function isTrustedOrigin(request) {
   return origin === APP_ORIGIN;
 }
 
+function appsScriptUrl(url, env) {
+  const target = new URL(APPS_SCRIPT_URL + url.search);
+  target.searchParams.set("internal_secret", env.INTERNAL_SECRET);
+  return target.toString();
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
