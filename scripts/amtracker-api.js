@@ -72,12 +72,8 @@ function doGet(e) {
     return handleVerifyEmail(token, email, e.parameter.scope);
   }
 
-    if (action === "check-verify" && email) {
+  if (action === "check-verify" && email) {
     return handleCheckVerify(email.toLowerCase().trim());
-  }
-
-  if (action === "check-token" && email && token) {
-    return handleCheckToken(email, token, e.parameter.scope);
   }
 
   return jsonResp({ status: "ok" });
@@ -303,7 +299,16 @@ function getVerifSheet() {
   let sheet = ss.getSheetByName("verifications");
   if (!sheet) {
     sheet = ss.insertSheet("verifications");
-    sheet.appendRow(["email", "token", "scope", "verified", "created_at", "expires_at"]);
+    sheet.appendRow([
+      "email",
+      "token",
+      "scope",
+      "verified",
+      "created_at",
+      "expires_at",
+      "session_token",
+      "session_expires_at"
+    ]);
   }
   return sheet;
 }
@@ -419,52 +424,44 @@ function handleVerifyEmail(token, email, scope) {
   const scopeIdx = headers.indexOf("scope");
   const verifiedIdx = headers.indexOf("verified");
   const expiresIdx = headers.indexOf("expires_at");
+  const sessionTokenIdx = headers.indexOf("session_token");
+  const sessionExpiresIdx = headers.indexOf("session_expires_at");
+
+  const normalizedEmail = String(email || "").toLowerCase().trim();
 
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
 
-    const validToken = row[tokenIdx] === token;
-    const validScope = row[scopeIdx] === scope;
-    const notExpired = new Date(row[expiresIdx]) > new Date();
-    const normEmail = String(email).toLowerCase().trim();
+    const matches =
+      row[tokenIdx] === token &&
+      row[scopeIdx] === scope &&
+      String(row[emailIdx]).toLowerCase().trim() === normalizedEmail &&
+      String(row[verifiedIdx]).toUpperCase() !== "TRUE" &&
+      new Date(row[expiresIdx]) > new Date();
 
-    if (
-      validToken &&
-      validScope &&
-      String(row[emailIdx]).toLowerCase().trim() === normEmail &&
-      notExpired
-    ) {
-      sheet.getRange(i + 1, verifiedIdx + 1).setValue(true);
+    if (!matches) continue;
 
-      
-      const redirectUrl =
-        "https://localhost:4321/exemption" +
-        "?verified=1" +
-        "&email=" + encodeURIComponent(email) +
-        "&token=" + encodeURIComponent(token) +
-        "&scope=" + encodeURIComponent(scope);
+    const sessionToken = Utilities.getUuid();
+    const sessionExpiresAt = new Date(
+      Date.now() + 60 * 60 * 1000
+    );
 
-      return htmlResp(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Email verified</title>
-          <meta http-equiv="refresh" content="0;url=${redirectUrl}">
-        </head>
-        <body>
-          <p>Email verified successfully: <strong>${email}</strong></p>
-          <p>Redirecting to the form…</p>
-          <p>If you are not redirected within 2 seconds, <a href="${redirectUrl}" target="_top">click here</a>.</p>
-          <script>
-            // Force redirect
-            window.top.location.href="${redirectUrl}";
-          </script>
-        </body>
-      </html>
-    `);
-    }
+    sheet.getRange(i + 1, verifiedIdx + 1).setValue(true);
+
+    // Consume the emailed token permanently.
+    sheet.getRange(i + 1, tokenIdx + 1).setValue("");
+
+    // Create a separate one-hour session token.
+    sheet.getRange(i + 1, sessionTokenIdx + 1).setValue(sessionToken);
+    sheet.getRange(i + 1, sessionExpiresIdx + 1).setValue(sessionExpiresAt);
+
+    return jsonResp({
+      verified: true,
+      sessionToken
+    });
   }
+
+  return jsonResp({ verified: false });
 }
 
 // check if email+token pair is valid and verified
@@ -490,26 +487,26 @@ function handleCheckToken(email, token, scope) {
   }
 }
 
-function isValidVerificationSession(email, token, scope) {
+function isValidVerificationSession(email, sessionToken, scope) {
   const sheet = getVerifSheet();
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
 
   const emailIdx = headers.indexOf("email");
-  const tokenIdx = headers.indexOf("token");
   const scopeIdx = headers.indexOf("scope");
   const verifiedIdx = headers.indexOf("verified");
-  const expiresIdx = headers.indexOf("expires_at");
+  const sessionTokenIdx = headers.indexOf("session_token");
+  const sessionExpiresIdx = headers.indexOf("session_expires_at");
 
   const normalizedEmail = String(email || "").toLowerCase().trim();
 
   return data.slice(1).some((row) => {
     return (
       String(row[emailIdx]).toLowerCase().trim() === normalizedEmail &&
-      row[tokenIdx] === token &&
       row[scopeIdx] === scope &&
       String(row[verifiedIdx]).toUpperCase() === "TRUE" &&
-      new Date(row[expiresIdx]) > new Date()
+      row[sessionTokenIdx] === sessionToken &&
+      new Date(row[sessionExpiresIdx]) > new Date()
     );
   });
 }

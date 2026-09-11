@@ -10,6 +10,7 @@ export default {
       "Access-Control-Allow-Origin": APP_ORIGIN,
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Credentials": "true",
     };
 
     if (request.method === "OPTIONS") {
@@ -144,21 +145,138 @@ export default {
         "&scope=" + encodeURIComponent(scope);
 
       const verified = await fetch(verifyUrl);
+      const verifiedText = await verified.text();
 
-      if (!verified.ok) {
-        return new Response("Could not verify this email. Request a new link.", {
-          status: 500
-        });
+      let verificationResult;
+
+      try {
+        verificationResult = JSON.parse(verifiedText);
+      } catch {
+        return new Response(
+          "Verification service returned unexpected data: " + verifiedText.slice(0, 300),
+          { status: 502 }
+        );
       }
+
+      if (!verified.ok || !verificationResult.verified) {
+        return new Response(
+          "This verification link has expired or was already used. Request a new link.",
+          { status: 400 }
+        );
+      }
+
+      const sessionValue = encodeURIComponent(
+        JSON.stringify({
+          email,
+          token: verificationResult.sessionToken,
+          scope
+        })
+      );
 
       const redirectUrl =
         APP_ORIGIN +
         "/exemption?verified=1" +
-        "&email=" + encodeURIComponent(email) +
-        "&token=" + encodeURIComponent(token) +
         "&scope=" + encodeURIComponent(scope);
 
-      return Response.redirect(redirectUrl, 303);
+      return new Response(null, {
+        status: 303,
+        headers: {
+          Location: redirectUrl,
+          "Set-Cookie":
+            "exemption_session=" + sessionValue + // __Host- in production
+            "; Path=/" +
+            "; Max-Age=3600" +
+            "; HttpOnly" + // cookie; frontend/JS cannot see token
+            // "; Secure" + // add for production
+            "; SameSite=Lax" // replace Lax with None for production
+        }
+      });
+    }
+
+    if (
+      path === "/" &&
+      request.method === "POST" &&
+      (
+        url.searchParams.get("action") === "submit-exemption" ||
+        url.searchParams.get("action") === "report-submission"
+      )
+    ) {
+      const cookieHeader = request.headers.get("Cookie") || "";
+
+      const match = cookieHeader.match(
+        /(?:^|;\s*)exemption_session=([^;]+)/  // __Host-exemption_session
+      );
+
+      if (!match) {
+        return new Response(
+          JSON.stringify({
+            error: "Your verification session has expired. Please verify your email again."
+          }),
+          {
+            status: 403,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders
+            }
+          }
+        );
+      }
+
+      let session;
+
+      try {
+        session = JSON.parse(decodeURIComponent(match[1]));
+      } catch {
+        return new Response(
+          JSON.stringify({ error: "Invalid verification session." }),
+          {
+            status: 403,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders
+            }
+          }
+        );
+      }
+
+      const action = url.searchParams.get("action");
+      const requiredScope =
+        action === "report-submission" ? "report" : "submit";
+
+      if (session.scope !== requiredScope) {
+        return new Response(
+          JSON.stringify({ error: "This session cannot perform that action." }),
+          {
+            status: 403,
+            headers: {
+              "Content-Type": "application/json",
+              ...corsHeaders
+            }
+          }
+        );
+      }
+
+      const body = await request.json();
+
+      body.submitter_email = session.email;
+      body.verification_token = session.token;
+
+      const response = await fetch(APPS_SCRIPT_URL + url.search, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+
+      return new Response(await response.text(), {
+        status: response.status,
+        headers: {
+          "Content-Type":
+            response.headers.get("Content-Type") || "application/json",
+          ...corsHeaders
+        }
+      });
     }
 
     // proxy to Apps Script
