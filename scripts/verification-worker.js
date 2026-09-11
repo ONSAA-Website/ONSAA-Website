@@ -32,18 +32,14 @@ export default {
     // don't auto-verify on click (link scanners)
     if (path === "/exemption/verify" && request.method === "GET") {
       const token = url.searchParams.get("token");
-      const email = url.searchParams.get("email");
-      const scope = url.searchParams.get("scope");
 
-      if (!token || !email || !scope) {
+      if (!token) {
         return new Response("Invalid verification link.", { status: 400 });
       }
 
       const confirmUrl =
         "/exemption/confirm" +
-        "?token=" + encodeURIComponent(token) +
-        "&email=" + encodeURIComponent(email) +
-        "&scope=" + encodeURIComponent(scope);
+        "?token=" + encodeURIComponent(token);
 
       return new Response(`
         <!doctype html>
@@ -142,10 +138,8 @@ export default {
 
     if (path === "/exemption/confirm" && request.method === "POST") {
       const token = url.searchParams.get("token");
-      const email = url.searchParams.get("email");
-      const scope = url.searchParams.get("scope");
 
-      if (!token || !email || !scope) {
+      if (!token) {
         return new Response("Invalid verification request.", { status: 400 });
       }
 
@@ -153,8 +147,6 @@ export default {
         APPS_SCRIPT_URL +
         "?action=verify-email" +
         "&token=" + encodeURIComponent(token) +
-        "&email=" + encodeURIComponent(email) +
-        "&scope=" + encodeURIComponent(scope) +
         "&internal_secret=" + encodeURIComponent(env.INTERNAL_SECRET);
 
       const verified = await fetch(verifyUrl.toString());
@@ -180,16 +172,16 @@ export default {
 
       const sessionValue = encodeURIComponent(
         JSON.stringify({
-          email,
+          email: verificationResult.email,
+          scope: verificationResult.scope,
           token: verificationResult.sessionToken,
-          scope
         })
       );
 
       const redirectUrl =
         APP_ORIGIN +
-        "/exemption?verified=1" +
-        "&scope=" + encodeURIComponent(scope);
+        "/exemption?verified=1" + 
+        "&scope=" + encodeURIComponent(verificationResult.scope);
 
       return new Response(null, {
         status: 303,

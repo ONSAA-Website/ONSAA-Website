@@ -99,18 +99,14 @@ function doGet(e) {
   
   const action = e.parameter.action;
   const token = e.parameter.token;
-  const email = e.parameter.email;
+  // const email = e.parameter.email;
 
   if (action === "list-exemptions") {
     return handleListExemptions();
   }
 
-  if (action === "verify-email" && token && email) {
-    return handleVerifyEmail(token, email, e.parameter.scope);
-  }
-
-  if (action === "check-verify" && email) {
-    return handleCheckVerify(email.toLowerCase().trim());
+  if (action === "verify-email" && token) { // change
+    return handleVerifyEmail(token);
   }
 
   return jsonResp({ status: "ok" });
@@ -172,11 +168,11 @@ function handleReport(e) {
     row.other_explanation = params.other_explanation || "";
     row.reporter_email = email;
 
-    // 5 submissions per hour per email
+    /* 5 submissions per hour per email
     const limit = checkEmailRateLimit(email, 3600000, 5);
     if (!limit.allowed) {
       return jsonResp({ error: limit.error }, 429);
-    }
+    } */
     
     const rowData = headers.map(h => sanitizeCell(row[h]));
 
@@ -231,11 +227,11 @@ function handleSubmitExemption(e) {
     row.info = params.info || "";
     row.email_verified = "TRUE";
 
-    // 5 submissions per hour per email
+    /* 5 submissions per hour per email
     const limit = checkEmailRateLimit(email, 3600000, 5);
     if (!limit.allowed) {
       return jsonResp({ error: limit.error }, 429);
-    }
+    } */
 
     const rowData = headers.map(h => sanitizeCell(row[h]));
 
@@ -300,21 +296,6 @@ function checkEmailRateLimit(email, windowMs, maxPerWindow) {
   return { allowed: true };
 }
 
-/* helper: checking for duplicate submissions; UPDATE: valid dupicates are possible
-function duplicateRow(checkRow) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName("Submissions"); 
-
-  var lastRow = sheet.getLastRow();
-
-  // loop from the last row up to row 2; assuming duplicate submissions are more likely back to back
-  for (var i = lastRow; i >= 2; i--) {
-    var rowValues = sheet.getRange(i, 1, 1, sheet.getLastColumn()).getValues();
-    // each set of course : institution : exemption : email type must be unique 
-    if ((checkRow[0] === rowValues[0]) & (checkRow[1] === rowValues[1]) & (checkRow[3] === rowValues[3]))
-  }
-}
-*/
 
 // helper: JSON response
 function jsonResp(data, status = 200) {
@@ -398,7 +379,7 @@ function handleRequestVerify(e) {
       });
     }
 
-    const verificationLimit = checkEmailRateLimit(
+    /* const verificationLimit = checkEmailRateLimit(
       "verify:" + email,
       60 * 60 * 1000,
       5
@@ -409,7 +390,7 @@ function handleRequestVerify(e) {
         { error: "Too many verification emails requested. Please try again later." },
         429
       );
-    }
+    } */
 
     const token = Utilities.getUuid();
     const createdAt = new Date();
@@ -428,13 +409,11 @@ function handleRequestVerify(e) {
 
     const verifyUrl =
       "https://autumn-term-3542.chrollobrollo.workers.dev/exemption/verify" +
-      "?token=" + encodeURIComponent(token) +
-      "&email=" + encodeURIComponent(email) +
-      "&scope=" + encodeURIComponent(scope);
+      "?token=" + encodeURIComponent(token);
 
     GmailApp.sendEmail(
       email,
-      "Verify your email – Academic Exemption Tracker",
+      "Verify your email – sAcademic Exemption Tracker",
       "Click the link to verify your email: " + verifyUrl,
       {
         htmlBody:
@@ -451,7 +430,7 @@ function handleRequestVerify(e) {
 }
 
 // handle email verification request (request-verify)
-function handleVerifyEmail(token, email, scope) {
+function handleVerifyEmail(token) {
   const sheet = getVerifSheet();
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
@@ -464,16 +443,14 @@ function handleVerifyEmail(token, email, scope) {
   const sessionTokenIdx = headers.indexOf("session_token");
   const sessionExpiresIdx = headers.indexOf("session_expires_at");
 
-  const normalizedEmail = String(email || "").toLowerCase().trim();
-
   for (let i = 1; i < data.length; i++) {
     const row = data[i];
 
     const matches =
       row[tokenIdx] === token &&
-      row[scopeIdx] === scope &&
-      String(row[emailIdx]).toLowerCase().trim() === normalizedEmail &&
-      String(row[verifiedIdx]).toUpperCase() !== "TRUE" &&
+      /* row[scopeIdx] === scope &&  // unique token is sufficient 
+      String(row[emailIdx]).toLowerCase().trim() === normalizedEmail && */
+      String(row[verifiedIdx]).toUpperCase() !== "TRUE" && 
       new Date(row[expiresIdx]) > new Date();
 
     if (!matches) continue;
@@ -494,6 +471,8 @@ function handleVerifyEmail(token, email, scope) {
 
     return jsonResp({
       verified: true,
+      email: String(row[emailIdx]).toLowerCase().trim(),
+      scope: String(row[scopeIdx]),
       sessionToken
     });
   }
