@@ -9,59 +9,10 @@ import Layout from "../../layouts/Layout.astro";
 // proxy URL (worker)
 const APPS_SCRIPT_URL = "https://verify.onsaa.workers.dev/";
 
-const ALLOWED_INSTITUTIONS = [
-  "McGill University",
-  "University of Toronto",
-  "University of British Columbia",
-  "University of Waterloo",
-  "University of Alberta",
-  "Queen's University",
-  "Western University",
-  "Simon Fraser University",
-  "York University",
-  "Toronto Metropolitan University"
-  // TODO: add more
-];
-
-const ALLOWED_DOMAINS = [
-  "edu",
-  "edu.ca",
-  "mail.utoronto.ca",
-  "utoronto.ca",
-  "mcgill.ca",
-  "ubc.ca",
-  "queensu.ca",
-  "yorku.ca",
-  "carleton.ca",
-  "uottawa.ca",
-  "ualberta.ca",
-  "ucalgary.ca",
-  "umanitoba.ca",
-  "usask.ca",
-  "mun.ca",
-  "upei.ca",
-  "acadiau.ca",
-  "dal.ca",
-  "concordia.ca",
-  "mcmaster.ca",
-  "uwaterloo.ca",
-  "uoguelph.ca",
-  "uwindsor.ca",
-  "brocku.ca",
-  "laurier.ca",
-  "ocad.ca",
-  "ryerson.ca",
-  "tmu.ca",
-  "sfu.ca",
-  "uvic.ca",
-  "unbc.ca",
-  "viu.ca",
-  "kpu.ca",
-  "bcit.ca",
-  "langara.ca",
-  "capilanou.ca",
-  "emilycarr.ca"
-];
+import {
+  ALLOWED_INSTITUTIONS,
+  ALLOWED_DOMAINS
+} from "./institutions.js";
 ---
 
 <Layout
@@ -652,7 +603,7 @@ const ALLOWED_DOMAINS = [
       if (params.get("verified") !== "1") {
         return;
       }
-      
+
       const scope = params.get("scope") || "submit"; // not a credential; only used to choose tab
 
       window.history.replaceState(
