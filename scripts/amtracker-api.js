@@ -408,7 +408,7 @@ function handleRequestVerify(e) {
     ]);
 
     const verifyUrl =
-      "https://autumn-term-3542.chrollobrollo.workers.dev/exemption/verify" +
+      "https://verify.onsaa.workers.dev/exemption/verify" +
       "?token=" + encodeURIComponent(token);
 
     GmailApp.sendEmail(
