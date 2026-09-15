@@ -8,52 +8,64 @@ const appsScriptUrl =
 ---
 
 <Layout
-  title="ONSAA"
+  title="Ontario Students Against Austerity"
   description="The ONSAA Landing Page."
   current="/"
   variant="hero"
 >
   <section class="content" aria-label="Landing page introduction">
-    <div class="hero-core">
-      <div class="title-lock">
-        <h1>ONSAA</h1>
-        <p class="subline">Ontario Students Against Austerity</p>
+    <div class="hero-layout">
+      <div class="hero-intro">
+        <p class="hero-kicker">Organizing / Education / Action</p>
+
+        <h1>Ontario Students<br />Against Austerity</h1>
+
+        <p class="hero-copy">
+          Building student power against cuts, privatization, and austerity.
+        </p>
       </div>
 
-      <div class="countdown" aria-label="Countdown timer">
-        <div class="countdown-card">
-          <span class="countdown-number" id="days">00</span>
-          <span class="countdown-label">Days</span>
-        </div>
-        <div class="countdown-card">
-          <span class="countdown-number" id="hours">00</span>
-          <span class="countdown-label">Hours</span>
-        </div>
-        <div class="countdown-card">
-          <span class="countdown-number" id="minutes">00</span>
-          <span class="countdown-label">Minutes</span>
-        </div>
-        <div class="countdown-card">
-          <span class="countdown-number" id="seconds">00</span>
-          <span class="countdown-label">Seconds</span>
+      <div class="strike-countdown">
+        <p class="countdown-heading">Days until the student strike</p>
+
+        <div class="countdown" aria-label="Countdown to the student strike">
+          <div class="countdown-card">
+            <span class="countdown-number" id="days">00</span>
+            <span class="countdown-label">Days</span>
+          </div>
+
+          <div class="countdown-card">
+            <span class="countdown-number" id="hours">00</span>
+            <span class="countdown-label">Hours</span>
+          </div>
+
+          <div class="countdown-card">
+            <span class="countdown-number" id="minutes">00</span>
+            <span class="countdown-label">Minutes</span>
+          </div>
+
+          <div class="countdown-card">
+            <span class="countdown-number" id="seconds">00</span>
+            <span class="countdown-label">Seconds</span>
+          </div>
         </div>
       </div>
 
-      <a class="button" href={url("/petition/")} style="margin-top: 20px;">
-  Sign the petition
-</a>
+      <div class="petition-row">
+        <a class="button" href={url("/petition/")}>
+          Sign the petition
+        </a>
 
-<section class="signature-panel" aria-label="Petition signatures">
-  <div class="signature-value-row">
-    <strong
-      ><span id="signature-count" class="is-loading" aria-live="polite"
-        >—</span
-      ></strong
-    >
-    <span class="signature-unit">students have signed.</span>
-  </div>
-</section>
-
+        <p class="signature-panel" aria-label="Petition signatures">
+          <span class="status-dot" aria-hidden="true"></span>
+          <strong
+            id="signature-count"
+            class="is-loading"
+            aria-live="polite"
+          >—</strong>
+          <span class="signature-unit">students have signed</span>
+        </p>
+      </div>
     </div>
   </section>
 </Layout>
