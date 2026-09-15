@@ -1,6 +1,7 @@
 ```astro
 ---
 import Layout from "../../layouts/Layout.astro";
+import trilliumImage from "../../assets/trillium.png";
 
 // TODO: stop spam verification link requests
 // TODO: prevent duplicates (email : course : exemption type)
@@ -38,6 +39,7 @@ import {
         <p class="checkbox-label">
             ⓘ ONSAA is not responsible for incorrect submissions. Please contact your instructor or check for an announcement to verify submissions.
         </p>
+        <div class="browse-wrap loading-state">
         <div class="search-wrap">
           <input
             type="text"
@@ -53,11 +55,14 @@ import {
         </div></div>
 
 
-        <div class="institutions-list loading-state" id="institutions-list">
-          <div class="loading-overlay">
-            <div class="modern-spinner"></div>
-            <span class="loading-text"></span>
-          </div>
+        <div class="institutions-list" id="institutions-list">
+          <img
+            src={trilliumImage.src}
+            alt=""
+            class="trillium-loader"
+            aria-hidden="true"
+          />
+        </div>
         </div>
 
       </div>
@@ -377,6 +382,7 @@ import {
     let searchableInstitutions = [];
     const courseSearch = document.getElementById("course-search");
     const searchResults = document.getElementById("search-results");
+    const browseWrap = document.getElementById("browse-wrap");
     const institutionsList = document.getElementById("institutions-list");
 
     const tabBtns = document.querySelectorAll(".tab-btn");
@@ -491,16 +497,16 @@ import {
         const json = await res.json();
         if (json.error) {
           console.error("Failed to load exemptions:", json.error);
-          institutionsList.innerHTML = "<p>Could not load exemptions.</p>";
-          institutionsList.classList.remove("loading-state");
+          browseWrap.innerHTML = "<p>Could not load exemptions.</p>";
+          browseWrap.classList.remove("loading-state");
           return;
         }
 
         const items = json.items || [];
 
         if (!items.length) {
-          institutionsList.innerHTML = "<p>No exemptions submitted yet.</p>";
-          institutionsList.classList.remove("loading-state");
+          browseWrap.innerHTML = "<p>No exemptions submitted yet.</p>";
+          browseWrap.classList.remove("loading-state");
           return;
         }
 
@@ -539,16 +545,16 @@ import {
           }))
         );
 
-        institutionsList.innerHTML = ''; 
-        institutionsList.classList.remove('loading-state');
+        browseWrap.innerHTML = ''; 
+        browseWrap.classList.remove('loading-state');
 
         // Render institutions list
         renderInstitutions();
 
       } catch (err) {
         console.error("Error loading exemptions:", err);
-        institutionsList.innerHTML = "<p>Could not load exemptions.</p>";
-        institutionsList.classList.remove("loading-state");
+        browseWrap.innerHTML = "<p>Could not load exemptions.</p>";
+        browseWrap.classList.remove("loading-state");
       }
     })();
 
@@ -1386,6 +1392,33 @@ import {
       opacity: 1;
     }
 
+    .trillium-loader {
+      display: block;
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+
+      filter:
+        grayscale(0.12)
+        contrast(1.12)
+        brightness(1.08)
+        drop-shadow(0 0 5px rgba(237, 255, 248, 0.2));
+
+      animation: trillium-spin 1.05s linear infinite;
+    }
+
+    @keyframes trillium-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .trillium-loader {
+        animation: none;
+      }
+    }
+
     .tab-btn.active {
       opacity: 1;
       border-bottom-color: rgba(255, 59, 48, 0.95);
@@ -1492,7 +1525,7 @@ import {
       margin-bottom: 24px;
     }
 
-    .institutions-list.loading-state {
+    .browse-wrap.loading-state {
       display: flex;
       flex-direction: column;
       align-items: center;
