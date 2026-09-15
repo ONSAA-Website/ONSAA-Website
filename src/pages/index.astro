@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import { url } from "../lib/url";
 import trilliumImage from '../assets/trillium.png';
+import SocialLinks from "../components/SocialLinks.astro";
 
 const targetDateTime = "2026-11-05T08:30:00-05:00";
 const appsScriptUrl =
@@ -21,14 +22,14 @@ const appsScriptUrl =
         
 
        <pre class="ascii-title" aria-label="Ontario Students Against Austerity">
-           <span class="ascii-flicker flicker-a flicker-node">.d8</span>8888b.  888b    888 88888888888     d8888 8888888b.  8888888 .d88888b.       .d8888b. 88888888888 888     888 8888888b.  8888888888 888b    888 8888<span class="ascii-flicker flicker-h flicker-node">888</span>8888 .d8888b.               
+           .d88888b.  888b    888 88888888888     d8888 8888888b.  8888888 .d88888b.       .d8888b. 88888888888 888     888 8888888b.  8888888888 888b    888 88888888888 .d8888b.               
           d<span class="ascii-flicker flicker-a flicker-node">88P</span>" "Y88b 8888b   888     <span class="ascii-flicker flicker-b flicker-node">888</span>        d88888 888   Y88b   888  d88P" "Y88b     d88P  Y88b    888     888     888 888  "Y88b 888        8888b   888     <span class="ascii-flicker flicker-h flicker-node">888</span>    d88P  Y88b              
           888     888 88888b  888     <span class="ascii-flicker flicker-b flicker-node">888</span>       d88P888 888    888   <span class="ascii-flicker flicker-c flicker-node">888</span>  888     888     Y88b.         888     888     888 888    888 888        88888b  888     888    Y88b.                   
           888     888 888Y88b 888     888      d88P 888 888   d88P   <span class="ascii-flicker flicker-c flicker-node">888</span>  888     888      "Y888b.      <span class="ascii-flicker flicker-d flicker-node">888</span>     888     888 888    888 8888888    888Y88b 888     888     "Y888b.                
           888     888 888 Y88b888     888     d88P  888 8888888P"    888  888     888         "Y88b.    <span class="ascii-flicker flicker-d flicker-node">888</span>     888     888 888    888 888        <span class="ascii-flicker flicker-e flicker-node">888</span> Y88b888     888        "Y88b.              
           888     888 <span class="ascii-flicker flicker-f flicker-node">888</span>  Y88888     888    d88P   888 888 T88b     888  888     888           "888    888     888     888 888    888 888        <span class="ascii-flicker flicker-e flicker-node">888</span>  Y88888     888          "888              
           Y88b. .d88P <span class="ascii-flicker flicker-f flicker-node">888</span>   Y8888     888   d8888888<span class="ascii-flicker flicker-g flicker-node">888</span> 888  T88b    888  Y88b. .d88P     Y88b  d88P    888     Y88b. .d88P 888  .d88P 888        888   Y8888     888    Y88b  d88P              
-           "Y88888P"  888    Y888     888  d88P     <span class="ascii-flicker flicker-g flicker-node">888</span> 888   T88b 8888888 "Y88888P"       "Y8888P"     888      "Y88888P"  8888888P"  8888888888 888    Y888     888     "Y8888P"               
+           "Y88888P"  888    Y888     888  d88P     888 888   T88b 8888888 "Y88888P"       "Y8888P"     888      "Y88888P"  8888888P"  8888888888 888    Y888     888     "Y8888P"               
                                                                                                                                                                                        
                                                                                                                                                                                        
                                                                                                                                                                                        
@@ -39,7 +40,7 @@ const appsScriptUrl =
    d88P  888 888  88888    d88P  888   888   <span class="ascii-flicker flicker-k flicker-node">888</span> Y88b888     "Y88b.    <span class="ascii-flicker flicker-l flicker-node">888</span>            d88P  888 888     888     "Y88b.    888     888        8888888P"    888       888         <span class="ascii-flicker flicker-p flicker-node">888</span>    
   d88P   888 888    888   d88P   888   888   888  Y88888       "888    <span class="ascii-flicker flicker-l flicker-node">888</span>           d88P   888 <span class="ascii-flicker flicker-m flicker-node">888</span>     888       "888    888     888        888 T88b     888       888         888    
  d8888888888 Y88b  d88P  d8888888888   888   888   Y8888 Y88b  d88P    888          d8888888888 <span class="ascii-flicker flicker-m flicker-node">Y88</span>b. .d88P Y88b  d88P    <span class="ascii-flicker flicker-n flicker-node">888</span>     888        888  T88b    888       888         888    
-d88P     888  "Y8888P88 d88P     888 8888888 888    Y888  "Y8888P"     888         d88P     888  "Y88888P"   "Y8888P"     <span class="ascii-flicker flicker-n flicker-node">888</span>     8888888888 888   T88b 8888888     888         888    
+d88P     888  "Y8888P88 d88P     888 8888888 888    Y888  "Y8888P"     888         d88P     888  "Y88888P"   "Y8888P"     888     8888888888 888   T88b 8888888     888         888    
 </pre>
 
       </div>
@@ -85,9 +86,14 @@ d88P     888  "Y8888P88 d88P     888 8888888 888    Y888  "Y8888P"     888      
           <span class="signature-unit">students have signed</span>
         </p>
       </div>
-      <a class="text-link" href={url("/volunteer/")}>
-        Volunteer with us <span aria-hidden="true">-&gt;</span>
-      </a>
+
+      <div class="contact-block">
+        <p class="contact-label">
+          Contact <span aria-hidden="true">-&gt;</span>
+        </p>
+
+        <SocialLinks />
+      </div>
     </div>
   </section>
   </div>

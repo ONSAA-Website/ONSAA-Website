@@ -61,6 +61,7 @@ body {
   z-index: -4;
   display: block;
   background-image: var(--background-image);
+  filter: brightness(200%);
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -150,42 +151,119 @@ body {
   transform: translateX(2px);
 }
 
-.social-links {
-  position: fixed;
-  top: clamp(28px, 4vw, 54px);
-  right: clamp(28px, 4vw, 54px);
-  z-index: 40;
+.hero-layout .social-links {
+  position: static;
   display: flex;
-  gap: 10px;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-top: 1rem;
 }
 
-.social-link {
+.hero-layout .social-link {
   display: grid;
-  width: clamp(26px, 3vw, 34px);
-  height: clamp(26px, 3vw, 34px);
+  width: 30px;
+  height: 30px;
   place-items: center;
-  color: rgba(255, 255, 255, 0.86);
-  filter: drop-shadow(0 8px 20px var(--shadow));
-  transition: color 180ms ease, transform 180ms ease, filter 180ms ease;
+
+  color: rgba(237, 255, 248, 0.946);
+  filter: none;
+  transition: color 180ms ease, transform 180ms ease;
 }
 
-.social-link:hover,
-.social-link:focus-visible {
+.hero-layout .social-link:hover,
+.hero-layout .social-link:focus-visible {
   color: var(--accent);
   outline: none;
   transform: translateY(-2px);
-  filter:
-    drop-shadow(0 8px 20px var(--shadow))
-    drop-shadow(0 0 16px rgba(255, 59, 48, 0.42));
+  filter: drop-shadow(0 0 7px rgba(255, 59, 48, 0.5));
 }
 
-.social-link:focus-visible,
-.button:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.72);
-  outline-offset: 4px;
+.hero-layout .social-link svg {
+  width: 100%;
+  height: 100%;
 }
 
 .social-link svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.contact-block {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.contact-label {
+  margin: 0 0 0.55rem;
+  color: rgba(237, 255, 248, 0.946);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  position: relative;
+  top: 5px;
+}
+
+.contact-block .social-link-email svg {
+  transform: scale(1.25);
+}
+
+.hero-layout .social-links {
+  position: static;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.8rem;
+  width: auto;
+  margin: 0;
+}
+
+/* Non-home pages: fixed in the usual upper-right corner. */
+/* Social icons on non-home pages. */
+.page > .social-links {
+  position: fixed;
+  top: clamp(28px, 4vw, 54px);
+  right: clamp(28px, 4vw, 54px);
+  left: auto;
+  z-index: 40;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: auto;
+  margin: 0;
+}
+
+.page > .social-links .social-link {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  place-items: center;
+
+  color: rgba(237, 255, 248, 0.82);
+  text-decoration: none;
+  filter: none;
+}
+
+.page > .social-links .social-link:visited {
+  color: rgba(237, 255, 248, 0.82);
+}
+
+.page > .social-links .social-link:hover,
+.page > .social-links .social-link:focus-visible {
+  color: var(--accent);
+  outline: none;
+  transform: translateY(-2px);
+  filter: drop-shadow(0 0 7px rgba(255, 59, 48, 0.5));
+}
+
+.page > .social-links .social-link svg {
   display: block;
   width: 100%;
   height: 100%;
@@ -340,10 +418,12 @@ body {
 .strike-countdown {
   width: min(500px, 100%);
   margin: clamp(2rem, 4vw, 3.5rem) auto;
+  margin-bottom: clamp(0.5rem, 2vw, 2rem);
+  margin-top: clamp(4rem, 6vw, 5.5rem);
 }
 
 .countdown-heading {
-  margin: 0.7rem 0 0;
+  margin: 0 0 0;
   color: var(--accent);
   font-size: 1.5rem;
   font-weight: 800;
@@ -393,7 +473,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 1.1rem;
-  margin-top: 1.5rem;
+  margin-top: 1.75rem;
 }
 
 .button {
@@ -516,11 +596,12 @@ body {
   left: 50%;
   z-index: 2;
   width: 1.85em;
-  height: 1em;
+  height: 2em;
   background: var(--accent);
   opacity: 0;
   pointer-events: none;
   transform: translateX(-50%);
+  animation: square-blink 11s steps(1, end) infinite;
 }
 
 .ascii-flicker.bottom::after {
@@ -552,6 +633,31 @@ body {
   50% {
     opacity: 1;
   }
+}
+
+/* interactive nodes */
+.ascii-flicker.flicker-node {
+  display: inline-block;
+  padding: 0.55em;
+  margin: -0.55em;
+}
+
+.ascii-flicker.flicker-node::after {
+  animation: none !important;
+  animation-delay: 0s !important;
+  opacity: 0 !important;
+}
+
+.ascii-flicker.flicker-node.is-active::after {
+  opacity: 0.7 !important;
+  box-shadow: 0 0 6px rgba(255, 59, 48, 0.7);
+}
+
+.ascii-flicker.flicker-node,
+.ascii-flicker.flicker-node.is-active {
+  color: inherit !important;
+  text-shadow: none !important;
+  cursor: crosshair;
 }
 
 @keyframes scroll-square-progress {
@@ -674,7 +780,7 @@ body {
 
   .petition-row {
     gap: 0.75rem;
-    margin-top: 1.25rem;
+    margin-top: 1.75rem;
   }
 
   .signature-panel {
@@ -720,21 +826,4 @@ body {
     animation: none;
     transition: none;
   }
-}
-
-.ascii-flicker {
-  transition: color 100ms steps(1, end), text-shadow 100ms steps(1, end);
-  
-}
-
-.ascii-flicker.flicker-node {
-  animation: none !important;
-  color: inherit;
-  text-shadow: none;
-}
-
-.ascii-flicker.is-active {
-  color: #ff3b30;
-  text-shadow: 0 0 7px rgba(255, 59, 48, 0.8);
-  cursor: crosshair;
 }
