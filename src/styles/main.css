@@ -1123,3 +1123,12 @@ body {
 .flicker-d::after { animation-delay: -7s; }
 .flicker-e::after { animation-delay: -9s; }
 .flicker-f::after { animation-delay: -10s; }
+.flicker-g::after { animation-delay: -0.5s; }
+.flicker-h::after { animation-delay: -1.8s; }
+.flicker-i::after { animation-delay: -2.5s; }
+.flicker-j::after { animation-delay: -4.2s; }
+.flicker-k::after { animation-delay: -5.8s; }
+.flicker-l::after { animation-delay: -6.6s; }
+.flicker-m::after { animation-delay: -8.1s; }
+.flicker-n::after { animation-delay: -9.6s; }
+.flicker-o::after { animation-delay: -10.7s; }
