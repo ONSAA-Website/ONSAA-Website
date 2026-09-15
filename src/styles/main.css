@@ -57,10 +57,19 @@ body {
   position: fixed;
   inset: 0;
   z-index: -2;
-  background:
-    radial-gradient(circle at center, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.74)),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.76));
   pointer-events: none;
+
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.035) 0,
+      rgba(255, 255, 255, 0.035) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    radial-gradient(circle at 72% 28%, rgba(215, 25, 32, 0.20), transparent 32rem),
+    linear-gradient(90deg, rgba(5, 5, 5, 0.82) 0%, rgba(5, 5, 5, 0.42) 65%, rgba(5, 5, 5, 0.68) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.68))
 }
 
 .edge-blur {
@@ -630,8 +639,14 @@ body {
   background-size: auto, 32px 32px, 32px 32px;
 }
 
-.page::before,
-.page::after,
+.page::before {
+  display: block;
+}
+
+.page::after {
+  display: block;
+}
+
 .edge-blur {
   display: none;
 }
@@ -730,6 +745,11 @@ body {
   color: var(--accent);
   outline: none;
   text-decoration: none;
+}
+
+.hero-layout > .text-link {
+  display: inline-block;
+  margin-top: 1rem;
 }
 
 .signature-panel {
@@ -846,13 +866,11 @@ body {
   border: 1px solid var(--accent);
   border-radius: 0;
   background: var(--accent);
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.62);
   color: #090909;
 }
 
 .button:hover,
 .button:focus-visible {
-  transform: translate(2px, 2px);
   background: #ffffff;
   color: #090909;
   box-shadow: 2px 2px 0 rgba(255, 59, 48, 0.65);
@@ -901,7 +919,7 @@ body {
   height: 100svh;
   min-height: 100svh;
   overflow: hidden;
-  padding: 4.5rem 2rem 2rem;
+  padding: 4rem 2rem 2rem 6rem;
   text-align: center;
 }
 
@@ -1007,4 +1025,26 @@ body {
 .hero-core h1 {
   word-spacing: -0.18em;
   letter-spacing: -0.085em;
+}
+
+:root {
+  --font-display: "Sixtyfour Variable", monospace;
+}
+
+.hero-intro h1 {
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.ascii-title {
+  margin: 0;
+  color: var(--text);
+  font-family: "JetBrains Mono", Consolas, monospace;
+  font-size: 7px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: pre;
+  text-align: center;
+  text-shadow: 3px 3px 0 rgba(255, 59, 48, 0.22);
 }
