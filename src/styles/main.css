@@ -406,7 +406,7 @@ body {
 /* Touch devices: JavaScript adds .is-open after a tap. */
 .trillium-control.is-open .trillium-mark {
   opacity: 1;
-  transform: rotate(90deg);
+  transform: rotate(55deg);
 }
 
 .trillium-control.is-open .trillium-tooltip {
