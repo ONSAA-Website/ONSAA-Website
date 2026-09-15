@@ -4,11 +4,15 @@ import Nav from "../components/Nav.astro";
 import SocialLinks from "../components/SocialLinks.astro";
 import { url } from "../lib/url";
 import logo from "../assets/logo.png";
-import background from "../assets/background.jpeg";
+import background from "../assets/background.png";
 // Declares the "Inter Variable" family that --font-sans leads with. Every
 // @font-face in here carries a unicode-range, so a browser only downloads the
 // latin subset it actually needs.
 import "@fontsource-variable/space-grotesk";
+import "@fontsource/vt323";
+import "@fontsource/syne-mono/400.css";
+import "@fontsource/convergence/400.css";
+import "@fontsource-variable/sixtyfour/full.css";
 import "../styles/main.css";
 import "../styles/shell.css";
 
@@ -25,7 +29,7 @@ const backgroundImage = await getImage({
   src: background,
   width: 1920,
   format: "webp",
-  quality: 70,
+  quality: 90,
   layout: "none",
 });
 
@@ -153,6 +157,12 @@ const ogImageUrl = new URL(ogImage.src, Astro.site);
     <main class={pageClass}>
       <div class="edge-blur" aria-hidden="true"></div>
       <div class="edge" aria-hidden="true"></div>
+
+      <div class="square-x" aria-hidden="true">
+        <div class="square-y">
+          <div class="bounce-square"></div>
+        </div>
+      </div>
 
       <Nav current={current} />
 

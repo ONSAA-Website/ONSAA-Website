@@ -1,5 +1,5 @@
 :root {
-  --accent: #d71920;
+  --accent: #c2102d;
   --accent-dark: #8f0f14;
   --text: #ffffff;
   --shadow: rgba(0, 0, 0, 0.72);
@@ -67,7 +67,6 @@ body {
       transparent 1px,
       transparent 4px
     ),
-    radial-gradient(circle at 72% 28%, rgba(215, 25, 32, 0.20), transparent 32rem),
     linear-gradient(90deg, rgba(5, 5, 5, 0.82) 0%, rgba(5, 5, 5, 0.42) 65%, rgba(5, 5, 5, 0.68) 100%),
     linear-gradient(180deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.68))
 }
@@ -104,12 +103,6 @@ body {
   position: fixed;
   inset: var(--edge-size);
   z-index: -1;
-  border: 2px solid var(--accent);
-  box-shadow:
-    0 0 0 1px rgba(215, 25, 32, 0.35),
-    inset 0 0 42px rgba(215, 25, 32, 0.16),
-    0 0 42px rgba(215, 25, 32, 0.22);
-  pointer-events: none;
 }
 
 .side-tabs {
@@ -358,7 +351,7 @@ body {
   padding: 0 18px;
   border: 1px solid rgba(215, 25, 32, 0.72);
   border-radius: 4px;
-  color: rgba(255, 255, 255, 0.92);
+  color: #c2102d;
   background:
     linear-gradient(135deg, rgba(215, 25, 32, 0.18), rgba(0, 0, 0, 0.52)),
     rgba(0, 0, 0, 0.44);
@@ -617,8 +610,8 @@ body {
   --accent-soft: rgba(255, 59, 48, 0.16);
   --bg: #080909;
   --panel: rgba(10, 13, 13, 0.88);
-  --line: rgba(234, 255, 248, 0.16);
-  --muted: rgba(234, 255, 248, 0.62);
+  --line: rgba(234, 255, 248, 0);
+  --muted: rgba(242, 254, 250, 0.886);
   --font-sans: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
 }
 
@@ -654,7 +647,6 @@ body {
 .edge {
   inset: 12px;
   border: 1px solid var(--line);
-  box-shadow: inset 0 0 0 1px rgba(255, 59, 48, 0.1);
 }
 
 .content {
@@ -1046,5 +1038,88 @@ body {
   letter-spacing: 0;
   white-space: pre;
   text-align: center;
-  text-shadow: 3px 3px 0 rgba(255, 59, 48, 0.22);
+  text-shadow: 3px 3px 0 rgba(255, 58, 48, 0.463);
 }
+
+.bounce-square {
+  --square-size: clamp(12px, 1.7vw, 22px);
+
+  position: fixed;
+  z-index: 100;
+  width: var(--square-size);
+  aspect-ratio: 1;
+  background: var(--accent);
+  pointer-events: none;
+
+  top: 1.25rem;
+  right: 1.25rem;
+
+  animation: scroll-square-progress linear both;
+  animation-timeline: scroll(root block);
+}
+
+.home-page .bounce-square {
+  top: auto;
+  bottom: 1.25rem;
+  animation-direction: reverse;
+}
+
+@keyframes scroll-square-progress {
+  from {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  to {
+    transform: translateY(
+      calc(100vh - var(--square-size) - 2.5rem)
+    ) rotate(180deg);
+  }
+}
+
+.ascii-flicker {
+  position: relative;
+}
+
+.ascii-flicker::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  width: 1.8em;
+  height: 0.8em;
+  background: var(--accent);
+
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+
+  animation: square-blink 11s steps(1, end) infinite;
+}
+
+
+
+@keyframes square-blink {
+  0%,
+  87%,
+  100% {
+    opacity: 0;
+  }
+
+  89%,
+  94% {
+    opacity: 0.7;
+    box-shadow: 0 0 6px rgba(255, 59, 48, 0.7);
+  }
+
+  96% {
+    opacity: 0;
+  }
+}
+
+.flicker-a::after { animation-delay: -1s; }
+.flicker-b::after { animation-delay: -3s; }
+.flicker-c::after { animation-delay: -5s; }
+.flicker-d::after { animation-delay: -7s; }
+.flicker-e::after { animation-delay: -9s; }
+.flicker-f::after { animation-delay: -10s; }
