@@ -239,7 +239,7 @@ d88P     888  "Y8888P88 d88P     888 8888888 888    Y888  "Y8888P"     888      
     { note: "E4", beats: 0.5 }, { note: "A4", beats: 0.5 }, { note: "B4", beats: 0.5 }, { note: "C5", beats: 0.5 }, { note: "A4", beats: 1.5 },
     { note: "E4", beats: 0.5 }, { note: "A4", beats: 0.5 }, { note: "B4", beats: 0.5 }, { note: "C5", beats: 0.5 }, { note: "B4", beats: 0.5 }, { note: "A4", beats: 0.5 }, { note: "C5", beats: 0.5 }, { note: "B4", beats: 0.5 }, { note: "A4", beats: 1 }, { note: "E5", beats: 1 },
   ];
-  const jingleLength = 16;
+  const jingleLength = jingle.length;
 
 
   let activeIndex = 0;
@@ -326,7 +326,7 @@ d88P     888  "Y8888P88 d88P     888 8888888 888    Y888  "Y8888P"     888      
       isCompleting = false;
       asciiGame?.classList.remove("signal-complete");
       activateNode(0);
-    }, 1200);
+    }, 7000);
   }
 
   async function armSound() {
