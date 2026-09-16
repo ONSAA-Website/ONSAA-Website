@@ -277,7 +277,7 @@ body {
 }
 
 .contact-trigger {
-  color: rgba(237, 255, 248, 0.817);
+  color: var(--text);
   font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -306,7 +306,7 @@ body {
   flex: 0 0 24px;
   width: 24px;
   height: 24px;
-  color: rgba(237, 255, 248, 0.817);
+  color: var(--text);
 }
 
 .content {
@@ -462,7 +462,7 @@ body {
 }
 
 .countdown-heading {
-  margin: 0 0 0;
+  margin: 0.25rem 0 0;
   color: var(--accent);
   font-size: 1.5rem;
   font-weight: 800;
