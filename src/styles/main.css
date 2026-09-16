@@ -369,7 +369,7 @@ body {
   top: 50%;
 
   width: max-content;
-  color: rgba(237, 255, 248, 0.86);
+  color: rgba(237, 255, 248, 0.951);
   font-family: var(--font-sans);
   font-size: 0.8rem;
   font-weight: 700;
@@ -866,4 +866,9 @@ body {
     animation: none;
     transition: none;
   }
+}
+
+#browse-loader[hidden],
+#browse-content[hidden] {
+  display: none !important;
 }

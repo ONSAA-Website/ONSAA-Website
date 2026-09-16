@@ -37,25 +37,11 @@ import {
 
       <div id="tab-browse" class="tab-content active">
         <p class="checkbox-label">
-            ⓘ ONSAA is not responsible for incorrect submissions. Please contact your instructor or check for an announcement to verify submissions.
+          ⓘ ONSAA is not responsible for incorrect submissions. Please contact your
+          instructor or check for an announcement to verify submissions.
         </p>
-        <div class="browse-wrap loading-state">
-        <div class="search-wrap">
-          <input
-            type="text"
-            id="course-search"
-            placeholder="Search by course code (e.g. CSC, ECO)..."
-          />
-          <div id="search-results" class="search-results"></div>
-        </div>
 
-        <div class="institution-block" style="margin-bottom:12px;"><div class="institution-header" style="display:flex; flex-direction:column;">
-          <span class="institution-name">Ontario College of Art and Design</span>
-          <p>ⓘ All OCAD assessments, lectures, and tutorials will be exempted on November 5th</p>
-        </div></div>
-
-
-        <div class="institutions-list" id="institutions-list">
+        <div id="browse-loader" class="browse-wrap loading-state" aria-live="polite">
           <img
             src={trilliumImage.src}
             alt=""
@@ -63,8 +49,26 @@ import {
             aria-hidden="true"
           />
         </div>
-        </div>
 
+        <div id="browse-content" hidden>
+          <div class="search-wrap">
+            <input
+              type="text"
+              id="course-search"
+              placeholder="Search by course code (e.g. CSC, ECO)..."
+            />
+            <div id="search-results" class="search-results"></div>
+          </div>
+
+          <div class="institution-block" style="margin-bottom: 12px;">
+            <div class="institution-header" style="display: flex; flex-direction: column;">
+              <span class="institution-name">Ontario College of Art and Design</span>
+              <p>ⓘ All OCAD assessments, lectures, and tutorials will be exempted on November 5th</p>
+            </div>
+          </div>
+
+          <div class="institutions-list" id="institutions-list"></div>
+        </div>
       </div>
 
       <div id="tab-submit" class="tab-content">
@@ -382,7 +386,8 @@ import {
     let searchableInstitutions = [];
     const courseSearch = document.getElementById("course-search");
     const searchResults = document.getElementById("search-results");
-    const browseWrap = document.getElementById("browse-wrap");
+    const browseLoader = document.getElementById("browse-loader");
+    const browseContent = document.getElementById("browse-content");
     const institutionsList = document.getElementById("institutions-list");
 
     const tabBtns = document.querySelectorAll(".tab-btn");
@@ -494,67 +499,67 @@ import {
     (async function loadExemptions() {
       try {
         const res = await fetch(APPS_SCRIPT_URL + "?action=list-exemptions");
+
+        if (!res.ok) {
+          throw new Error(`Request failed: ${res.status}`);
+        }
+
         const json = await res.json();
+
         if (json.error) {
-          console.error("Failed to load exemptions:", json.error);
-          browseWrap.innerHTML = "<p>Could not load exemptions.</p>";
-          browseWrap.classList.remove("loading-state");
-          return;
+          throw new Error(json.error);
         }
 
         const items = json.items || [];
 
         if (!items.length) {
-          browseWrap.innerHTML = "<p>No exemptions submitted yet.</p>";
-          browseWrap.classList.remove("loading-state");
+          institutionsList.innerHTML = "<p>No exemptions submitted yet.</p>";
           return;
         }
 
-        // Group by institution
         const byInst = new Map();
-        items.forEach(item => {
+
+        items.forEach((item) => {
           const instName = item.institution || "Unknown institution";
+
           if (!byInst.has(instName)) {
             byInst.set(instName, []);
           }
+
           byInst.get(instName).push(item);
         });
 
-        // Build institutions array 
         sortedInstitutions = Array.from(byInst.entries())
           .sort((a, b) => a[0].localeCompare(b[0]))
           .map(([name, courses]) => ({
             name,
-            courses: courses.map(c => ({
-              code: c.course_code || "",
-              name: c.course_name || "",
-              exemption_type: c.exemption_type || "",
-              description: c.description || "",
-              info: c.info || ""
-            }))
+            courses: courses.map((course) => ({
+              code: course.course_code || "",
+              name: course.course_name || "",
+              exemption_type: course.exemption_type || "",
+              description: course.description || "",
+              info: course.info || "",
+            })),
           }));
 
-        // Flatten for search
-        allCourses = sortedInstitutions.flatMap(inst =>
-          inst.courses.map(c => ({
-            institution: inst.name,
-            code: c.code,
-            name: c.name,
-            exemption_type: c.exemption_type,
-            description: c.description
-          }))
+        allCourses = sortedInstitutions.flatMap((institution) =>
+          institution.courses.map((course) => ({
+            institution: institution.name,
+            code: course.code,
+            name: course.name,
+            exemption_type: course.exemption_type,
+            description: course.description,
+          })),
         );
 
-        browseWrap.innerHTML = ''; 
-        browseWrap.classList.remove('loading-state');
-
-        // Render institutions list
         renderInstitutions();
-
       } catch (err) {
         console.error("Error loading exemptions:", err);
-        browseWrap.innerHTML = "<p>Could not load exemptions.</p>";
-        browseWrap.classList.remove("loading-state");
+        institutionsList.innerHTML =
+          "<p>Could not load exemptions. Please refresh and try again.</p>";
+      } finally {
+        browseLoader.hidden = true;
+        browseContent.hidden = false;
       }
     })();
 
