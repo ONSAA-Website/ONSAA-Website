@@ -25,7 +25,19 @@ const links = [
 ];
 ---
 
-<nav class="side-tabs" aria-label="Primary">
+<button
+  class="menu-toggle"
+  type="button"
+  aria-label="Open navigation menu"
+  aria-controls="site-nav"
+  aria-expanded="false"
+>
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
+<nav id="site-nav" class="side-tabs" aria-label="Primary">
   <span class="nav-square" aria-hidden="true"></span>
   {
     links.map((link) => (
@@ -54,3 +66,13 @@ const links = [
     ))
   }
 </nav>
+
+<script>
+  const toggle = document.querySelector(".menu-toggle");
+  const nav = document.querySelector("#site-nav");
+
+  toggle?.addEventListener("click", () => {
+    const isOpen = nav?.classList.toggle("is-open");
+    toggle.setAttribute("aria-expanded", String(isOpen));
+  });
+</script>
