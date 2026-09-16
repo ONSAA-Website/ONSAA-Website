@@ -20,13 +20,13 @@ const appsScriptUrl =
     <div class="hero-layout">
       <div class="hero-intro">
         
-
+       <div class="ascii-game" id="ascii-game" aria-label="Interactive title">
        <pre class="ascii-title" aria-label="Ontario Students Against Austerity">
            .d88888b.  888b    888 88888888888     d8888 8888888b.  8888888 .d88888b.       .d8888b. 88888888888 888     888 8888888b.  8888888888 888b    888 88888888888 .d8888b.               
           d<span class="ascii-flicker flicker-a flicker-node">88P</span>" "Y88b 8888b   888     <span class="ascii-flicker flicker-b flicker-node">888</span>        d88888 888   Y88b   888  d88P" "Y88b     d88P  Y88b    888     888     888 888  "Y88b 888        8888b   888     <span class="ascii-flicker flicker-h flicker-node">888</span>    d88P  Y88b              
-          888     888 88888b  888     <span class="ascii-flicker flicker-b flicker-node">888</span>       d88P888 888    888   <span class="ascii-flicker flicker-c flicker-node">888</span>  888     888     Y88b.         888     888     888 888    888 888        88888b  888     888    Y88b.                   
+          888     888 88888b  888     <span class="ascii-flicker flicker-b flicker-node">888</span>       d88P888 888    888   888  888     888     Y88b.         888     888     888 888    888 888        88888b  888     888    Y88b.                   
           888     888 888Y88b 888     888      d88P 888 888   d88P   <span class="ascii-flicker flicker-c flicker-node">888</span>  888     888      "Y888b.      <span class="ascii-flicker flicker-d flicker-node">888</span>     888     888 888    888 8888888    888Y88b 888     888     "Y888b.                
-          888     888 888 Y88b888     888     d88P  888 8888888P"    888  888     888         "Y88b.    <span class="ascii-flicker flicker-d flicker-node">888</span>     888     888 888    888 888        <span class="ascii-flicker flicker-e flicker-node">888</span> Y88b888     888        "Y88b.              
+          888     888 888 Y88b888     888     d88P  888 8888888P"    888  888     888         "Y88b.    888     888     888 888    888 888        <span class="ascii-flicker flicker-e flicker-node">888</span> Y88b888     888        "Y88b.              
           888     888 <span class="ascii-flicker flicker-f flicker-node">888</span>  Y88888     888    d88P   888 888 T88b     888  888     888           "888    888     888     888 888    888 888        <span class="ascii-flicker flicker-e flicker-node">888</span>  Y88888     888          "888              
           Y88b. .d88P <span class="ascii-flicker flicker-f flicker-node">888</span>   Y8888     888   d8888888<span class="ascii-flicker flicker-g flicker-node">888</span> 888  T88b    888  Y88b. .d88P     Y88b  d88P    888     Y88b. .d88P 888  .d88P 888        888   Y8888     888    Y88b  d88P              
            "Y88888P"  888    Y888     888  d88P     888 888   T88b 8888888 "Y88888P"       "Y8888P"     888      "Y88888P"  8888888P"  8888888888 888    Y888     888     "Y8888P"               
@@ -39,9 +39,10 @@ const appsScriptUrl =
     d88P 888 888            d<span class="ascii-flicker flicker-j flicker-node">88P</span> 888   888   <span class="ascii-flicker flicker-k flicker-node">888</span>Y88b 888  "Y888b.      888             d88P 888 888     888  "Y888b.      888     8888888    888   d88P   888       888        Y<span class="ascii-flicker flicker-p flicker-node">888</span>P   
    d88P  888 888  88888    d88P  888   888   <span class="ascii-flicker flicker-k flicker-node">888</span> Y88b888     "Y88b.    <span class="ascii-flicker flicker-l flicker-node">888</span>            d88P  888 888     888     "Y88b.    888     888        8888888P"    888       888         <span class="ascii-flicker flicker-p flicker-node">888</span>    
   d88P   888 888    888   d88P   888   888   888  Y88888       "888    <span class="ascii-flicker flicker-l flicker-node">888</span>           d88P   888 <span class="ascii-flicker flicker-m flicker-node">888</span>     888       "888    888     888        888 T88b     888       888         888    
- d8888888888 Y88b  d88P  d8888888888   888   888   Y8888 Y88b  d88P    888          d8888888888 <span class="ascii-flicker flicker-m flicker-node">Y88</span>b. .d88P Y88b  d88P    <span class="ascii-flicker flicker-n flicker-node">888</span>     888        888  T88b    888       888         888    
+ d8888888888 Y88b  d88P  d8888888888   888   888   Y8888 Y88b  d88P    888          d8888888888 Y88b. .d88P Y88b  d88P    <span class="ascii-flicker flicker-n flicker-node">888</span>     888        888  T88b    888       888         888    
 d88P     888  "Y8888P88 d88P     888 8888888 888    Y888  "Y8888P"     888         d88P     888  "Y88888P"   "Y8888P"     888     8888888888 888   T88b 8888888     888         888    
 </pre>
+</div>
 
       </div>
 
@@ -230,25 +231,147 @@ d88P     888  "Y8888P88 d88P     888 8888888 888    Y888  "Y8888P"     888      
   loadSignatureCount();
 
   const flickerNodes = [...document.querySelectorAll(".flicker-node")];
-let activeIndex = 0;
+  const asciiGame = document.getElementById("ascii-game");
 
-function activateNode(index) {
-  flickerNodes.forEach((node, nodeIndex) => {
-    node.classList.toggle("is-active", nodeIndex === index);
-  });
+  const notes = [261.63, 329.63, 392.0, 523.25, 392.0, 329.63];
+  const jingle = [261.63, 329.63, 392.0, 523.25, 659.25, 523.25];
 
-  activeIndex = index;
+  let activeIndex = 0;
+  let completedSteps = 0;
+  let audioContext = null;
+  let soundArmed = false;
+  let isCompleting = false;
+
+
+  function playTone(frequency, delay = 0, duration = 0.18) {
+    if (!audioContext || audioContext.state !== "running") {
+      console.log("Sound blocked. Context state:", audioContext?.state);
+      return;
+    }
+
+    const startTime = audioContext.currentTime + delay;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(frequency, startTime);
+
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, startTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration + 0.04);
+  }
+
+  function activateNode(index) {
+    flickerNodes.forEach((node, nodeIndex) => {
+      node.classList.toggle("is-active", nodeIndex === index);
+    });
+
+    activeIndex = index;
+  }
+
+  function finishFlickerGame() {
+    isCompleting = true;
+
+    flickerNodes.forEach((node) => {
+      node.classList.remove("is-active");
+    });
+
+    asciiGame?.classList.add("signal-complete");
+
+    jingle.forEach((frequency, index) => {
+      playTone(frequency, index * 0.11, 0.16);
+    });
+
+    window.setTimeout(() => {
+      completedSteps = 0;
+      isCompleting = false;
+      asciiGame?.classList.remove("signal-complete");
+      activateNode(0);
+    }, 1200);
+  }
+
+  async function armSound() {
+  if (!audioContext) {
+    audioContext = new AudioContext();
+  }
+
+  if (audioContext.state !== "running") {
+    await audioContext.resume();
+  }
+
+  return audioContext.state === "running";
 }
 
-/* Start with exactly one red square. */
-activateNode(0);
+  function collectActiveNode(index) {
+    if (isCompleting || index !== activeIndex) return;
 
-flickerNodes.forEach((node, index) => {
-  node.addEventListener("mouseenter", () => {
-    if (index !== activeIndex) return;
+    playTone(notes[completedSteps % notes.length]);
 
-    const nextIndex = (activeIndex + 1) % flickerNodes.length;
-    activateNode(nextIndex);
+    completedSteps += 1;
+
+    if (completedSteps >= flickerNodes.length) {
+      finishFlickerGame();
+      return;
+    }
+
+    activateNode((activeIndex + 1) % flickerNodes.length);
+  }
+
+  flickerNodes.forEach((node, index) => {
+    node.addEventListener("pointerdown", async (event) => {
+      if (index !== activeIndex || isCompleting) return;
+
+      event.preventDefault();
+
+      const ready = await armSound();
+
+      if (!ready) {
+        console.warn("Audio is still unavailable:", audioContext?.state);
+        return;
+      }
+
+      soundArmed = true;
+      collectActiveNode(index);
+    });
+
+    node.addEventListener("pointerenter", (event) => {
+      if (event.pointerType !== "mouse") return;
+      if (!soundArmed || audioContext?.state !== "running") return;
+
+      collectActiveNode(index);
+    });
   });
-});
+
+  activateNode(0);
+
+  // sound test
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "s") return;
+
+    if (!audioContext) {
+      audioContext = new AudioContext();
+    }
+
+    audioContext.resume().then(() => {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+
+      oscillator.type = "square";
+      oscillator.frequency.value = 440;
+
+      gain.gain.value = 0.35;
+
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 1);
+    });
+  });
 </script>
