@@ -299,7 +299,7 @@ body {
 
 .contact-reveal:hover .social-links,
 .contact-reveal:focus-within .social-links {
-  width: 68px;
+  width: 140px;
   opacity: 1;
   transform: translateX(0);
 }
