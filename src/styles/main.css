@@ -10,7 +10,7 @@
   --edge-size: clamp(10px, 1.4vw, 18px);
   --background-image: none;
   --nav-width: 200px;
-  --font-sans: "Space Grotesk Variable", "Space Grotesk", sans-serif;;
+  --font-sans: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
   --font-display: "Sixtyfour Variable", "JetBrains Mono", Consolas, monospace;
 }
 
