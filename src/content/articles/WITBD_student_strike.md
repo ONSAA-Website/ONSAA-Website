@@ -11,7 +11,7 @@ On February 12, the Ford government announced a major attack on the Ontario Stud
 
 To fight the cuts, at least a thousand students, faculty, and allies rallied outside [Queen’s Park](https://ca.news.yahoo.com/ontario-students-stage-mass-protest-174449678.html) on March 4, and students at the University of [Ottawa](https://charlatan.ca/ottawa-students-protest-osap-cuts/#:~:text=Dozens%20of%20students%20gathered%20outside,for%20eligible%20students%20next%20year.), University of [Waterloo](https://www.cbc.ca/news/canada/kitchener-waterloo/university-waterloo-rally-osap-cuts-queens-park-protest-9.7114129), and a number of [high schools](https://www.cbc.ca/news/canada/toronto/students-plan-walkout-rally-against-osap-cuts-9.7110511) staged walk-outs. The NDP organized a “Save OSAP” [town hall](https://www.ontariondp.ca/SaveOSAPTownHall), and on March 24, there will be another mass rally at Queen’s Park. It’s clear students are angry about the attacks on our future and want to organize against them, but the only question is: where do we go from here?
 
-# The Struggle for a Student Strike
+## The Struggle for a Student Strike
 
 The grassroots walkouts on March 4 showed that students are willing to take matters into their own hands and take spontaneous action. However, spontaneous energy can dissipate. The challenge ahead of us is maintaining this momentum and channeling it toward something that can truly reverse the OSAP cuts. It’s clear the Ford government isn’t listening to us. He seems to think he can ride out the protests and ignore petitions, using his majority in Queen’s Park to ram through his agenda.
 
@@ -25,7 +25,7 @@ We can also draw lessons from the September 2019 [Assembly](https://theeyeopener
 
 Further, the group that led the organizing effort, the Revolutionary Communist Party, was more focused on recruiting students to their own organization than actually mobilizing for the student strike, leading the next [assembly](https://theeyeopener.com/2019/11/rsu-and-cesar-to-partner-with-ryerson-student-strike-for-the-nov-6-day-of-action/) to be much more poorly attended. Students must focus on building popular momentum and comprehensively discussing strategy if we’re going to win the fight against the OSAP cuts.
 
-# The Student Union Leadership Must Be Pushed
+## The Student Union Leadership Must Be Pushed
 
 One of the challenges in organizing a student strike is that for it to be effective, it must get the support of student unions across Ontario and ideally the Canadian Federation of Students–Ontario (CFS-O). In order to do that, rank-and-file student organizers should do everything we can to pressure our representatives into action.
 
@@ -41,7 +41,7 @@ We need to build toward a strike now and strike while the iron’s hot, or else 
 
 The need to gain support from faculty also isn’t an excuse, because education workers are under [attack](https://www.cbc.ca/news/canada/toronto/ontario-college-layoffs-1.7581037) too, and a student strike initiative with institutional backing could encourage workers to join us in solidarity. The fact that organizing a student strike will be difficult and takes lots of preparation isn’t a reason not to do it. The buck needs to stop now, and the student union leadership is in a great position to lead.
 
-# No Faith in the Liberals or NDP
+## No Faith in the Liberals or NDP
 
 Liberal and NDP politicians were both present at the March 4 rally, attempting to use the rally to present themselves as leading forces against Ford's attacks on education. However, in the 2025 election, the Ontario Liberals merely presented lukewarm [reforms](https://ontarioliberal.ca/wp-content/uploads/2025/02/A-Plan-to-Do-More-For-You.pdf) such as “Eliminate interest on OSAP loans and raise the income threshold for repayment to $50,000.”
 
@@ -57,7 +57,7 @@ For example, the BC NDP went back on many of their promises, such as implementin
 
 At this very moment, instead of trying to help students organize towards a student strike, Marit Stiles and the Ontario NDP are trying to cynically promote themselves and funnel the momentum of the students into electoralism. We do not have the time to wait around until the next provincial election. What is needed is radical, mass action now. We must act and organize a student strike to truly bring the system to its knees and force change.
 
-# The Struggle for Education is a Struggle Against Oppression
+## The Struggle for Education is a Struggle Against Oppression
 
 Some speakers at the March 4 rally at Queen’s Park made the point that the struggle against the OSAP cuts must be a struggle against oppression everywhere. They rightly made the connection between the cuts to education and the bombings of Iranian, Palestinian, and Lebanese educational facilities, including a girls' [elementary school](https://news.un.org/en/story/2026/03/1167063) at the beginning of the current war with Iran. The money “saved” by cuts to education are going directly into the repressive apparatuses of the state, including the [police](https://news.ontario.ca/en/backgrounder/1006623/ontario-protecting-communities-by-enhancing-policing-across-the-province).
 

@@ -28,6 +28,13 @@ const dateFormat = new Intl.DateTimeFormat("en-CA", {
         <h1>Articles</h1>
       </section>
 
+      <p class="checkbox-label articles-submission-note">
+        Want to contribute an article, analysis, or opinion piece?
+        Email your pitch or draft to <a href="mailto:on.students.against.austerity@gmail.com">
+          on.students.against.austerity@gmail.com
+        </a>.
+      </p>
+
       <section class="article-list">
         {
           articles.map((article) => (
@@ -75,37 +82,81 @@ const dateFormat = new Intl.DateTimeFormat("en-CA", {
 </Layout>
 
 <style is:global>
+  .page-header {
+    padding: 12px 0 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+  }
+
+  .page-header h1 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(2.4rem, 7vw, 5.5rem);
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -0.065em;
+    text-transform: uppercase;
+  }
+
+  .articles-submission-note {
+    max-width: 950px;
+    margin: 24px 0 6px;
+    cursor: default;
+  }
+
+  .articles-submission-note a {
+    color: #fff;
+    font-weight: 700;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+
+  .articles-submission-note a:hover {
+    color: var(--accent);
+  }
+
+  .checkbox-label {
+    gap: 10px;
+
+    padding: 10px 12px;
+    margin-bottom: 20px;
+    margin-top: 14px;
+
+    border-left: 3px solid rgb(215, 9, 9);
+    background: rgba(255, 255, 255, 0.06);
+
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.95rem;
+
+    cursor: pointer;
+  }
+
   .article-list {
-    margin-top: 24px;
-    display: grid;
-    gap: 18px;
+    margin: 0;
+  }
+
+  .article-card {
+    padding: 30px 0 32px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
   }
 
   .article-type {
-    margin: 0 0 10px;
+    margin: 0 0 9px;
     color: var(--accent);
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 800;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
   }
 
   .article-card h2 {
-    margin: 0 0 10px;
+    max-width: 900px;
+    margin: 0;
     color: #fff;
-    font-size: 1.2rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-
-  .read-more {
-    display: inline-flex;
-    margin-top: 12px;
-    color: #fff;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    text-decoration: none;
+    font-size: clamp(1.55rem, 3.5vw, 2.65rem);
+    font-weight: 750;
+    line-height: 1.04;
+    letter-spacing: -0.04em;
   }
 
   .article-title-link {
@@ -113,19 +164,84 @@ const dateFormat = new Intl.DateTimeFormat("en-CA", {
     text-decoration: none;
   }
 
-  .article-title-link:hover,
-  .read-more:hover,
-  .external-link:hover {
-    text-decoration: underline;
+  .article-title-link:hover {
+    color: var(--accent);
   }
 
+  .page-header a {
+    color: #fff;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  } 
+
+  .page-header a:hover {
+    color: var(--accent);
+  }
+
+  .article-card > p:not(.article-type) {
+    max-width: 680px;
+    margin: 13px 0 0;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .read-more,
   .external-link {
     display: inline-flex;
-    margin-top: 12px;
-    margin-left: 14px;
-    color: #bbb;
-    font-size: 0.85rem;
+    align-items: center;
+    margin-top: 18px;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     text-decoration: none;
   }
 
+  .read-more {
+    color: #fff;
+  }
+
+  .read-more::after {
+    content: "→";
+    margin-left: 8px;
+    color: var(--accent);
+    font-size: 1rem;
+    line-height: 0;
+    transition: transform 150ms ease;
+  }
+
+  .read-more:hover::after {
+    transform: translateX(4px);
+  }
+
+  .external-link {
+    margin-left: 18px;
+    color: rgba(255, 255, 255, 0.58);
+  }
+
+  .read-more:hover,
+  .external-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  @media (max-width: 600px) {
+    .page-header {
+      padding-bottom: 22px;
+    }
+
+    .article-card {
+      padding: 23px 0 25px;
+    }
+
+    .article-card h2 {
+      font-size: 1.5rem;
+    }
+
+    .external-link {
+      margin-left: 14px;
+    }
+  }
 </style>

@@ -49,6 +49,19 @@ const dateFormat = new Intl.DateTimeFormat("en-CA", {
 </Layout>
 
 <style is:global>
+  .article-page {
+    padding-top: 12px;
+  }
+
+  .article-page > .article-type {
+    margin: 0 0 14px;
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
   .article-page h1 {
     margin: 0 0 18px;
     color: #fff;
@@ -57,44 +70,106 @@ const dateFormat = new Intl.DateTimeFormat("en-CA", {
 
   .article-summary {
     max-width: 760px;
-    margin: 0 0 32px;
-    color: #ddd;
-    font-size: 1.15rem;
-    line-height: 1.6;
+    margin: 28px 0 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: clamp(1.08rem, 2vw, 1.3rem);
+    line-height: 1.48;
+  }
+
+  .article-author {
+    max-width: 760px;
+    margin: 20px 0 34px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
 
   .article-body {
-    max-width: 760px;
-    color: #fff;
-    line-height: 1.7;
+    max-width: 720px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.06rem;
+    line-height: 1.75;
   }
 
+  .article-body h1,
   .article-body h2,
   .article-body h3 {
-    margin-top: 2rem;
+    margin: 2.5rem 0 0.8rem;
     color: #fff;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+
+  .article-body h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+  }
+
+  .article-body h2 {
+    font-size: clamp(1.55rem, 3vw, 2.15rem);
+  }
+
+  .article-body h3 {
+    font-size: 1.3rem;
   }
 
   .article-body p {
-    margin: 0 0 1.25rem;
+    margin: 0 0 1.35rem;
   }
 
   .article-body ul,
   .article-body ol {
-    margin: 0 0 1.25rem;
-    padding-left: 1.5rem;
+    margin: 0 0 1.4rem;
+    padding-left: 1.35rem;
+  }
+
+  .article-body li + li {
+    margin-top: 0.45rem;
+  }
+
+  .article-body blockquote {
+    margin: 1.8rem 0;
+    padding: 0.2rem 0 0.2rem 1.1rem;
+    border-left: 3px solid var(--accent);
+    color: rgba(255, 255, 255, 0.74);
+  }
+
+  .article-body blockquote p:last-child {
+    margin-bottom: 0;
   }
 
   .article-body a {
-    color: inherit;
+    color: #fff;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
   }
 
-  .article-type {
-    margin: 0 0 12px;
+  .article-body a:hover {
     color: var(--accent);
-    font-size: 0.75rem;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+  }
+
+  @media (max-width: 600px) {
+    .article-page h1 {
+      font-size: 2.5rem;
+      line-height: 0.97;
+    }
+
+    .article-summary {
+      margin-top: 22px;
+    }
+
+    .article-author {
+      margin-bottom: 27px;
+    }
+
+    .article-body {
+      font-size: 1rem;
+      line-height: 1.7;
+    }
   }
 </style>
