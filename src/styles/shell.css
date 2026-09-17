@@ -41,7 +41,7 @@
   top: var(--frame-gap);
   right: var(--frame-gap);
   bottom: var(--frame-gap);
-  left: calc(var(--nav-width) + var(--frame-gap) + 18px);
+  left: calc(var(--nav-width) + var(--frame-gap));
   z-index: 1;
   overflow-y: auto;
   overflow-x: hidden;

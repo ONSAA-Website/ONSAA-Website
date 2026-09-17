@@ -154,6 +154,9 @@ const ogImageUrl = new URL(ogImage.src, Astro.site);
     class={frameClass}
     style={`--content-max: ${contentMax}; --background-image: url("${backgroundImage.src}");`}
   >
+    {variant !== "hero" && (
+      <div class="page-red-square" aria-hidden="true"></div>
+    )}
     <main class={pageClass}>
       <div class="edge-blur" aria-hidden="true"></div>
       <div class="edge" aria-hidden="true"></div>
