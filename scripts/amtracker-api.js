@@ -1,380 +1,582 @@
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzER3j3__BhPZPQXMEVcipD58Gay-jOa0ET5Evb5tDQs9XCxnciV4eS0N3_X6ScnTfPhQ/exec";
-const APP_ORIGIN = "onsaa.org"; 
+const SPREADSHEET_ID = "1YNnDNz4w_Tu9DDZckf_jtRn-6e4aUKPd8WocnlW22o0";
 
-function isTrustedOrigin(request) {
-  const origin = request.headers.get("Origin");
+// allowlist of Canadian higher-ed domains + .edu
+const ALLOWED_DOMAINS = [
+	"acadiau.ca",		
+	"assumptionu.ca",		
+	"athabascau.ca",		
+	"bcit.ca",		
+	"bcou.ca",		
+	"boothcollege.ca",		
+	"bowvalleycollege.ca",		
+	"brandonu.ca",		
+	"brocku.ca",		
+	"capilanou.ca",		
+	"carleton.ca",		
+	"cbu.ca",		
+	"ccbc.ca",		
+	"cegepdrummond.ca",		
+	"cegepmontpetit.ca",		
+	"centennialcollege.ca",		
+	"citecollegiale.ca",		
+	"columbiacollege.ca",		
+	"concordia.ca",		
+	"cus.ca",		
+	"cuslm.ca",		
+	"dal.ca",		
+	"devry.ca",		
+	"ecuad.ca",		
+	"etsmtl.ca",		
+	"fanshaweonline.ca",		
+	"firstnationsuniversity.ca",		
+	"hec.ca",		
+	"humbermail.ca",		
+	"inrs.ca",		
+	"lakeheadu.ca",		
+	"laurentian.ca",		
+	"mcgill.ca",		
+	"mcmaster.ca",		
+	"mohawkcollege.ca",		
+	"msvu.ca",		
+	"mta.ca",		
+	"mun.ca",		
+	"myseneca.ca",		
+	"mytru.ca",		
+	"nait.ca",		
+	"nbcc.ca",		
+	"nipissingu.ca",		
+	"nscc.ca",		
+	"ocad.ca",		
+	"polymtl.ca",		
+	"queensu.ca",		
+	"questu.ca",		
+	"redeemer.ca",		
+	"rmc.ca",		
+	"royalroads.ca",		
+	"rrc.ca",		
+	"ryerson.ca",		
+	"sait.ca",		
+	"saskpolytech.ca",		
+	"saultcollege.ca",		
+	"sfu.ca",		
+	"stfx.ca",		
+	"stmarys.ca",		
+	"stthomasu.ca",		
+	"stu.ca",		
+	"trentu.ca",		
+	"tru.ca",		
+	"twu.ca",		
+	"ualberta.ca",		
+	"ubc.ca",		
+	"ubishops.ca",		
+	"ucalgary.ca",		
+	"ufv.ca",		
+	"ulaval.ca",		
+	"uleth.ca",		
+	"umanitoba.ca",		
+	"umoncton.ca",		
+	"umontreal.ca",		
+	"unb.ca",		
+	"unbc.ca",		
+	"unbsj.ca",		
+	"universitycanadawest.ca",		
+	"uoguelph.ca",		
+	"uoit.ca",		
+	"uottawa.ca",		
+	"upei.ca",		
+	"uqac.ca",		
+	"uqam.ca",		
+	"uqo.ca",		
+	"uqtr.ca",		
+	"uquebec.ca",		
+	"uregina.ca",		
+	"usask.ca",		
+	"usherb.ca",		
+	"usherbrooke.ca",		
+	"ustpaul.ca",		
+	"utoronto.ca",		
+	"uvic.ca",		
+	"uwaterloo.ca",		
+	"uwindsor.ca",		
+	"uwinnipeg.ca",		
+	"uwo.ca",		
+	"vcc.ca",		
+	"viu.ca",		
+	"wlu.ca",		
+	"yorku.ca",		
+];
 
-  return origin === APP_ORIGIN;
+
+const INTERNAL_SECRET =
+  PropertiesService.getScriptProperties()
+    .getProperty("INTERNAL_SECRET");
+
+
+function hasValidInternalSecret(e) {
+  const supplied = String(e.parameter.internal_secret || "");
+
+  return (
+    INTERNAL_SECRET &&
+    supplied &&
+    supplied === INTERNAL_SECRET
+  );
 }
 
-function appsScriptUrl(url, env) {
-  const target = new URL(APPS_SCRIPT_URL + url.search);
-  target.searchParams.set("internal_secret", env.INTERNAL_SECRET);
-  return target.toString();
+
+// preventing formula injections
+function sanitizeCell(value) {
+  const text = String(value ?? "");
+  if (/^[=+\-@\t\r]/.test(text)) {
+    return "'" + text;
+  }
+  return text;
 }
 
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-    const path = url.pathname;
 
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": APP_ORIGIN,
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-      "Access-Control-Allow-Credentials": "true",
-    };
+// entry point for POST requests
+function doPost(e) {
+  // prevent direct exec
+  if (!hasValidInternalSecret(e)) {
+    return jsonResp({ error: "Unauthorized" });
+  }
 
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders });
+  const action = e.parameter.action;
+
+  if (action === "request-verify") {
+    return handleRequestVerify(e);
+  }
+  
+  if (action === "submit-exemption") {
+    return handleSubmitExemption(e);
+  }
+
+  if (action === "report-submission") {
+    return handleReport(e);
+  }
+
+  return jsonResp({ error: "Unknown action: " + action }, 400);
+}
+
+// entry point for GET requests
+function doGet(e) {
+  // prevent direct exec
+  if (!hasValidInternalSecret(e)) {
+    return jsonResp({ error: "Unauthorized" });
+  }
+  
+  const action = e.parameter.action;
+  const token = e.parameter.token;
+  // const email = e.parameter.email;
+
+  if (action === "list-exemptions") {
+    return handleListExemptions();
+  }
+
+  if (action === "verify-email" && token) { // change
+    return handleVerifyEmail(token);
+  }
+
+  return jsonResp({ status: "ok" });
+}
+
+
+function handleListExemptions() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Submissions");
+  if (!sheet) {
+    return jsonResp({ error: "Submissions sheet not found" }, 500);
+  }
+
+  const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) {
+    return jsonResp({ items: [] });
+  }
+
+  const headers = data[0];
+  const items = data.slice(1).map((row) => ({
+    institution: row[headers.indexOf("institution")] || "",    course_code: row[headers.indexOf("course_code")] || "",    course_name: row[headers.indexOf("course_name")] || "",    exemption_type: row[headers.indexOf("exemption_type")] || "",    description: row[headers.indexOf("description")] || "",    info: row[headers.indexOf("info")] || ""
+  }));
+
+  return jsonResp({ items });
+}
+
+
+function handleReport(e) {
+  try {
+    const params = JSON.parse(e.postData.contents);
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("Reports"); 
+
+    if (!sheet) {
+      return jsonResp({ error: "Reports sheet not found" });
     }
 
-    // don't auto-verify on click (link scanners)
-    if (path === "/exemption/verify" && request.method === "GET") {
-      const token = url.searchParams.get("token");
-
-      if (!token) {
-        return new Response("Invalid verification link.", { status: 400 });
-      }
-
-      const confirmUrl =
-        "/exemption/confirm" +
-        "?token=" + encodeURIComponent(token);
-
-      return new Response(`
-        <!doctype html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-            <title>Confirm email verification</title>
-          </head>
-          <body style="
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px 16px;
-            box-sizing: border-box;
-            background: #0a0a0a;
-            color: #ffffff;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-          ">
-            <main style="
-              width: 100%;
-              max-width: 560px;
-              box-sizing: border-box;
-              padding: 28px;
-              background: rgba(255, 255, 255, 0.04);
-              border: 1px solid rgba(255, 255, 255, 0.14);
-              border-radius: 10px;
-              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-            ">
-              <p style="
-                margin: 0 0 8px;
-                color: rgba(255, 59, 48, 0.95);
-                font-size: 0.85rem;
-                font-weight: 700;
-                letter-spacing: 0.06em;
-                text-transform: uppercase;
-              ">
-                Academic Exemption Database
-              </p>
-
-              <h1 style="
-                margin: 0 0 10px;
-                font-size: 1.5rem;
-                line-height: 1.25;
-                color: #ffffff;
-              ">
-                Confirm your email
-              </h1>
-
-              <p style="
-                margin: 0 0 24px;
-                color: rgba(255, 255, 255, 0.85);
-                font-size: 0.95rem;
-                line-height: 1.5;
-              ">
-                Click below to finish verifying your institutional email address.
-              </p>
-
-              <form method="POST" action="${confirmUrl}" style="margin: 0;">
-                <button
-                  type="submit"
-                  style="
-                    appearance: none;
-                    width: 100%;
-                    padding: 11px 16px;
-                    border: 0;
-                    border-radius: 6px;
-                    background: rgba(255, 59, 48, 0.85);
-                    color: #ffffff;
-                    font: inherit;
-                    font-size: 0.95rem;
-                    font-weight: 600;
-                    cursor: pointer;
-                  "
-                >
-                  Confirm email
-                </button>
-              </form>
-
-              <p style="
-                margin: 18px 0 0;
-                color: rgba(255, 255, 255, 0.6);
-                font-size: 0.8rem;
-                line-height: 1.45;
-              ">
-                If you did not request this verification, you can close this page.
-              </p>
-            </main>
-          </body>
-        </html>
-      `, {
-        headers: { "Content-Type": "text/html; charset=UTF-8" }
-      });
-    }
-
-    if (path === "/exemption/confirm" && request.method === "POST") {
-      const token = url.searchParams.get("token");
-
-      if (!token) {
-        return new Response("Invalid verification request.", { status: 400 });
-      }
-
-      const verifyUrl =
-        APPS_SCRIPT_URL +
-        "?action=verify-email" +
-        "&token=" + encodeURIComponent(token) +
-        "&internal_secret=" + encodeURIComponent(env.INTERNAL_SECRET);
-
-      const verified = await fetch(verifyUrl.toString());
-      const verifiedText = await verified.text();
-
-      let verificationResult;
-
-      try {
-        verificationResult = JSON.parse(verifiedText);
-      } catch {
-        return new Response(
-          "Verification service returned unexpected data: " + verifiedText.slice(0, 300),
-          { status: 502 }
-        );
-      }
-
-      if (!verified.ok || !verificationResult.verified) {
-        return new Response(
-          "This verification link has expired or was already used. Request a new link.",
-          { status: 400 }
-        );
-      }
-
-      const sessionValue = encodeURIComponent(
-        JSON.stringify({
-          email: verificationResult.email,
-          scope: verificationResult.scope,
-          token: verificationResult.sessionToken,
-        })
+    const email = params.submitter_email;
+    const token = String(params.verification_token || "");
+    if (!isValidVerificationSession(email, token, "report")) {
+      return jsonResp(
+        { error: "Your verification session has expired. Please refresh the page and verify your email again." },
+        403
       );
-
-      const redirectUrl =
-        APP_ORIGIN +
-        "/exemption?verified=1" + 
-        "&scope=" + encodeURIComponent(verificationResult.scope);
-
-      return new Response(null, {
-        status: 303,
-        headers: {
-          Location: redirectUrl,
-          "Set-Cookie":
-            "exemption_session=" + sessionValue + "__Host-" +
-            "; Path=/" +
-            "; Max-Age=3600" +
-            "; HttpOnly" + // cookie; frontend/JS cannot see token
-            "; Secure" + // add for production
-            "; SameSite=None" // replace Lax with None for production
-        }
-      });
     }
 
-    if (
-      path === "/" &&
-      request.method === "POST" &&
-      (
-        url.searchParams.get("action") === "submit-exemption" ||
-        url.searchParams.get("action") === "report-submission"
-      )
-    ) {
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
 
-      if (!isTrustedOrigin(request)) {
-        return new Response(
-          JSON.stringify({ error: "Blocked cross-site request." }),
-          {
-            status: 403,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders
-            }
-          }
-        );
-      }
+    const row = {};
+    row.course_name = params.course_name;
+    row.reason = params.reason_select || "";
+    row.instructor_contact = params.instructor_contact || "";
+    row.other_explanation = params.other_explanation || "";
+    row.reporter_email = email;
 
-      const cookieHeader = request.headers.get("Cookie") || "";
+    /* 5 submissions per hour per email
+    const limit = checkEmailRateLimit(email, 3600000, 5);
+    if (!limit.allowed) {
+      return jsonResp({ error: limit.error }, 429);
+    } */
+    
+    const rowData = headers.map(h => sanitizeCell(row[h]));
 
-      const match = cookieHeader.match(
-        /(?:^|;\s*)exemption_session=([^;]+)/  // __Host-exemption_session
+    sheet.appendRow(rowData);
+
+    return jsonResp({ success: true });
+  }
+  catch (err) {
+    return jsonResp({ error: err.message || "Submission failed" });
+  }
+}
+
+
+function handleSubmitExemption(e) {
+  const lock = LockService.getScriptLock();
+  // one submission written at a time
+  lock.tryLock(10000);
+
+  try {
+    const params = JSON.parse(e.postData.contents);
+
+    const email = String(params.submitter_email || "").toLowerCase().trim();
+    const token = String(params.verification_token || "");
+
+    if (!isValidVerificationSession(email, token, "submit")) {
+      return jsonResp(
+        { error: "Your verification session has expired. Please verify your email again." },
+        403
       );
+    }
 
-      if (!match) {
-        return new Response(
-          JSON.stringify({
-            error: "Your verification session has expired. Please verify your email again."
-          }),
-          {
-            status: 403,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders
-            }
-          }
-        );
-      }
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("Submissions"); 
 
-      let session;
+    if (!sheet) {
+      return jsonResp({ error: "Submissions sheet not found" });
+    }
 
-      try {
-        session = JSON.parse(decodeURIComponent(match[1]));
-      } catch {
-        return new Response(
-          JSON.stringify({ error: "Invalid verification session." }),
-          {
-            status: 403,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders
-            }
-          }
-        );
-      }
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
 
-      const action = url.searchParams.get("action");
-      const requiredScope =
-        action === "report-submission" ? "report" : "submit";
+    const row = {};
+    row.created_at = new Date().toISOString();
+    row.institution = params.institution || "";
+    row.institution_id = params.institution_id || "";
+    row.course_code = params.course_code || "";
+    row.course_name = params.course_name || "";
+    row.exemption_type = params.exemption_type || "";
+    row.description = params.description || "";
+    row.submitter_name = params.submitter_name || "";
+    row.submitter_email = email || "";
+    row.vow = params.vow === true ? "TRUE" : "FALSE";
+    row.info = params.info || "";
+    row.email_verified = "TRUE";
 
-      if (session.scope !== requiredScope) {
-        return new Response(
-          JSON.stringify({ error: "This session cannot perform that action." }),
-          {
-            status: 403,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders
-            }
-          }
-        );
-      }
+    /* 5 submissions per hour per email
+    const limit = checkEmailRateLimit(email, 3600000, 5);
+    if (!limit.allowed) {
+      return jsonResp({ error: limit.error }, 429);
+    } */
 
-      const body = await request.json();
+    const rowData = headers.map(h => sanitizeCell(row[h]));
 
-      body.submitter_email = session.email;
-      body.verification_token = session.token;
+    sheet.appendRow(rowData);
 
-      const response = await fetch(appsScriptUrl(url, env), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      });
+    return jsonResp({ success: true });
 
-      return new Response(await response.text(), {
-        status: response.status,
-        headers: {
-          "Content-Type":
-            response.headers.get("Content-Type") || "application/json",
-          ...corsHeaders
-        }
+  } catch (err) {
+    return jsonResp({ error: err.message || "Submission failed" });
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function checkEmailRateLimit(email, windowMs, maxPerWindow) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let rlSheet = ss.getSheetByName("rateLimits");
+  if (!rlSheet) {
+    rlSheet = ss.insertSheet("rateLimits");
+    rlSheet.appendRow(["email", "count", "reset_at"]); // headers
+  }
+
+  const data = rlSheet.getDataRange().getValues();
+  const headers = data[0] || [];
+  const emailIndex = headers.indexOf("email");
+  const countIndex = headers.indexOf("count");
+  const resetIndex = headers.indexOf("reset_at");
+
+  const now = new Date();
+  let rowIdx = -1;
+
+  // find existing row for this email
+  for (let i = 1; i < data.length; i++) {
+    if ((data[i][emailIndex] || "").toLowerCase() === email.toLowerCase()) {
+      rowIdx = i + 1; // 1-based row number
+      break;
+    }
+  }
+
+  if (rowIdx === -1) {
+    // new email: start count at 1
+    rlSheet.appendRow([email, 1, new Date(now.getTime() + windowMs).toISOString()]);
+    return { allowed: true };
+  }
+
+  const count = data[rowIdx - 1][countIndex] || 0;
+  const resetAt = new Date(data[rowIdx - 1][resetIndex]);
+
+  if (now > resetAt) {
+    // window expired: reset
+    rlSheet.getRange(rowIdx, countIndex + 1).setValue(1);
+    rlSheet.getRange(rowIdx, resetIndex + 1).setValue(new Date(now.getTime() + windowMs).toISOString());
+    return { allowed: true };
+  }
+
+  if (count >= maxPerWindow) {
+    return { allowed: false, error: "Too many submissions from this email. Please try again later." };
+  }
+
+  // increment count
+  rlSheet.getRange(rowIdx, countIndex + 1).setValue(count + 1);
+  return { allowed: true };
+}
+
+
+// helper: JSON response
+function jsonResp(data, status = 200) {
+  const json = JSON.stringify(data);
+  return ContentService
+    .createTextOutput(json)
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// helper: HTML response
+function htmlResp(html) {
+  return HtmlService
+    .createHtmlOutput(html);
+}
+
+// helper: get verifications sheet
+function getVerifSheet() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName("verifications");
+  if (!sheet) {
+    sheet = ss.insertSheet("verifications");
+    sheet.appendRow([
+      "email",      "token",      "scope",      "verified",      "created_at",      "expires_at",      "session_token",      "session_expires_at"
+    ]);
+  }
+  return sheet;
+}
+
+// check if email domain is allowed (institutional emails only)
+function isAllowedDomain(email) {
+  const domain = email.split("@")[1]?.toLowerCase();
+  if (!domain) return false;
+
+  if (domain.endsWith(".edu")) return true;
+  if (ALLOWED_DOMAINS.includes(domain) || ALLOWED_DOMAINS.includes(domain.split(".").slice(-2).join("."))) return true;
+  if (domain.endsWith(".edu.ca") || domain.endsWith(".ac.ca")) return true;
+
+  return false;
+}
+
+// send verification email (request-verify)
+function handleRequestVerify(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+
+    const email = String(data.email || "").toLowerCase().trim();
+    const scope = data.scope === "report" ? "report" : "submit";
+
+    const existingEmail = String(data.existing_email || "")
+      .toLowerCase()
+      .trim();
+
+    const existingToken = String(data.existing_token || "");
+
+    if (!email || !email.includes("@")) {
+      return jsonResp({ error: "Invalid email" }, 400);
+    }
+
+    if (!isAllowedDomain(email)) {
+      return jsonResp(
+        { error: "Email domain not recognized as a Canadian higher-education institution." },
+        403
+      );
+    }
+
+    const sessionActive =
+      existingEmail === email &&
+      isValidVerificationSession(existingEmail, existingToken, scope);
+
+    if (sessionActive) {
+      return jsonResp({
+        success: true,
+        alreadyVerified: true
       });
     }
 
-    // basic rate limiting; email verification + search
-    if (
-      request.method === "GET" &&
-      url.searchParams.get("action") === "request-verify"
-    ) {
-      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+    /* const verificationLimit = checkEmailRateLimit(
+      "verify:" + email,
+      60 * 60 * 1000,
+      5
+    );
 
-      const { success } = await env.ONSAA_LIMITER.limit({
-        key: `verify:${ip}`,
-      });
+    if (!verificationLimit.allowed) {
+      return jsonResp(
+        { error: "Too many verification emails requested. Please try again later." },
+        429
+      );
+    } */
 
-      if (!success) {
-        return new Response(
-          JSON.stringify({
-            error: "Too many verification requests. Please wait a minute and try again."
-          }),
-          {
-            status: 429,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders,
-              "Retry-After": "60"
-            }
-          }
-        );
+    const token = Utilities.getUuid();
+    const createdAt = new Date();
+    const expiresAt = new Date(createdAt.getTime() + 60 * 60 * 1000);
+
+    const verifSheet = getVerifSheet();
+
+    verifSheet.appendRow([
+      email,
+      token,
+      scope,
+      false,
+      createdAt,
+      expiresAt
+    ]);
+
+    const verifyUrl =
+      "https://verify.onsaa.workers.dev/exemption/verify" +
+      "?token=" + encodeURIComponent(token);
+
+    GmailApp.sendEmail(
+      email,
+      "Verify your email – sAcademic Exemption Tracker",      "Click the link to verify your email: " + verifyUrl,
+      {
+        htmlBody:
+          "<p>Click the link below to verify your email address:</p>" +
+          '<p><a href="' + verifyUrl + '">' + verifyUrl + "</a></p>" +
+          "<p>If you did not request this, you can ignore this email.</p>"
       }
-    }
-    else if (
-      request.method === "GET" &&
-      url.searchParams.get("action") === "list-exemptions"
-    ) {
-      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+    );
 
-      const { success } = await env.SEARCH_LIMITER.limit({
-        key: `verify:${ip}`,
-      });
+    return jsonResp({ success: true, alreadyVerified: false });
+  } catch (err) {
+    return jsonResp({ error: err.message || "Could not request verification." }, 500);
+  }
+}
 
-      if (!success) {
-        return new Response(
-          JSON.stringify({
-            error: "Too many search requests. Please wait a minute and try again."
-          }),
-          {
-            status: 429,
-            headers: {
-              "Content-Type": "application/json",
-              ...corsHeaders,
-              "Retry-After": "60"
-            }
-          }
-        );
-      }
-    }
+// handle email verification request (request-verify)
+function handleVerifyEmail(token) {
+  const sheet = getVerifSheet();
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
 
-    // proxy to Apps Script
-    const targetUrl = appsScriptUrl(url, env);
+  const emailIdx = headers.indexOf("email");
+  const tokenIdx = headers.indexOf("token");
+  const scopeIdx = headers.indexOf("scope");
+  const verifiedIdx = headers.indexOf("verified");
+  const expiresIdx = headers.indexOf("expires_at");
+  const sessionTokenIdx = headers.indexOf("session_token");
+  const sessionExpiresIdx = headers.indexOf("session_expires_at");
 
-    const init = {
-      method: request.method,
-      headers: {
-        "Content-Type": request.headers.get("Content-Type") || "application/json",
-      },
-    };
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
 
-    if (request.method === "POST") {
-      init.body = await request.text();
-    }
+    const matches =
+      row[tokenIdx] === token &&
+      /* row[scopeIdx] === scope &&  // unique token is sufficient 
+      String(row[emailIdx]).toLowerCase().trim() === normalizedEmail && */
+      String(row[verifiedIdx]).toUpperCase() !== "TRUE" && 
+      new Date(row[expiresIdx]) > new Date();
 
-    const response = await fetch(targetUrl, init);
-    const body = await response.text();
+    if (!matches) continue;
 
-    return new Response(body, {
-      status: response.status,
-      headers: {
-        "Content-Type": response.headers.get("Content-Type") || "application/json",
-        ...corsHeaders,
-      },
+    const sessionToken = Utilities.getUuid();
+    const sessionExpiresAt = new Date(
+      Date.now() + 60 * 60 * 1000
+    );
+
+    sheet.getRange(i + 1, verifiedIdx + 1).setValue(true);
+
+    // Consume the emailed token permanently.
+    sheet.getRange(i + 1, tokenIdx + 1).setValue("");
+
+    // Create a separate one-hour session token.
+    sheet.getRange(i + 1, sessionTokenIdx + 1).setValue(sessionToken);
+    sheet.getRange(i + 1, sessionExpiresIdx + 1).setValue(sessionExpiresAt);
+
+    return jsonResp({
+      verified: true,
+      email: String(row[emailIdx]).toLowerCase().trim(),
+      scope: String(row[scopeIdx]),
+      sessionToken
     });
-  },
-};
+  }
+
+  return jsonResp({ verified: false });
+}
+
+// check if email+token pair is valid and verified
+function handleCheckToken(email, token, scope) {
+  try {
+    const verifSheet = getVerifSheet();
+    const vdata = verifSheet.getDataRange().getValues();
+    const headers = vdata[0];
+
+    const emailIdx = headers.indexOf("email");
+    const tokenIdx = headers.indexOf("token");
+    const verifiedIdx = headers.indexOf("verified");
+
+    if (emailIdx === -1 || tokenIdx === -1 || verifiedIdx === -1) {
+      return jsonResp({ verified: false });
+    }
+
+    const verified = isValidVerificationSession(email, token, scope);
+
+    return jsonResp({ verified });
+  } catch (err) {
+    return jsonResp({ verified: false });
+  }
+}
+
+function isValidVerificationSession(email, sessionToken, scope) {
+  const sheet = getVerifSheet();
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+
+  const emailIdx = headers.indexOf("email");
+  const scopeIdx = headers.indexOf("scope");
+  const verifiedIdx = headers.indexOf("verified");
+  const sessionTokenIdx = headers.indexOf("session_token");
+  const sessionExpiresIdx = headers.indexOf("session_expires_at");
+
+  const normalizedEmail = String(email || "").toLowerCase().trim();
+
+  return data.slice(1).some((row) => {
+    return (
+      String(row[emailIdx]).toLowerCase().trim() === normalizedEmail &&
+      row[scopeIdx] === scope &&
+      String(row[verifiedIdx]).toUpperCase() === "TRUE" &&
+      row[sessionTokenIdx] === sessionToken &&
+      new Date(row[sessionExpiresIdx]) > new Date()
+    );
+  });
+}
