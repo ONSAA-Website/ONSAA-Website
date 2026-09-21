@@ -15,6 +15,7 @@ const articles = defineCollection({
     /** External link, if the piece is published elsewhere. */
     link: z.string().optional(),
     draft: z.boolean().default(false),
+    author: z.string().optional(),
   }),
 });
 

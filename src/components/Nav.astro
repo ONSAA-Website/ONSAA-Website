@@ -15,16 +15,31 @@ const links = [
   { href: "/", label: "Home" },
   { href: "/about-us/", label: "About us" },
   // { href: "/chapter-map/", label: "Our Chapters" },
-  // { href: "/articles/", label: "Articles" },
+  { href: "/articles/", label: "Articles" },
+  { href: "/exemption/", label: "Exemption database" },
   { href: "/resource-guides/", label: "Resource guides" },
   // { href: "/news/", label: "News and updates" }, entries to be added
+  { href: "/exemption/", label: "Exemption Database" },
   { href: "/petition/", label: "Sign Petition" },
   { href: "/volunteer/", label: "Volunteer with us" },
   { href: "https://donate.stripe.com/00w8wR5EC1tB5b0baP9IQ00", label: "Donate", external:true },
 ];
 ---
 
-<nav class="side-tabs" aria-label="Primary">
+<button
+  class="menu-toggle"
+  type="button"
+  aria-label="Open navigation menu"
+  aria-controls="site-nav"
+  aria-expanded="false"
+>
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
+<nav id="site-nav" class="side-tabs" aria-label="Primary">
+  <span class="nav-square" aria-hidden="true"></span>
   {
     links.map((link) => (
       <a
@@ -52,3 +67,13 @@ const links = [
     ))
   }
 </nav>
+
+<script>
+  const toggle = document.querySelector(".menu-toggle");
+  const nav = document.querySelector("#site-nav");
+
+  toggle?.addEventListener("click", () => {
+    const isOpen = nav?.classList.toggle("is-open");
+    toggle.setAttribute("aria-expanded", String(isOpen));
+  });
+</script>
