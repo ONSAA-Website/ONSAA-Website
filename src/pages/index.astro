@@ -1,6 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { url } from "../lib/url";
+import trilliumImage from '../assets/trillium.png';
+import SocialLinks from "../components/SocialLinks.astro";
 
 const targetDateTime = "2026-11-05T08:30:00-05:00";
 const appsScriptUrl =
@@ -8,54 +10,119 @@ const appsScriptUrl =
 ---
 
 <Layout
-  title="ONSAA"
+  title="Ontario Students Against Austerity"
   description="The ONSAA Landing Page."
   current="/"
   variant="hero"
 >
+  <div class="home-page">
   <section class="content" aria-label="Landing page introduction">
-    <div class="hero-core">
-      <div class="title-lock">
-        <h1>ONSAA</h1>
-        <p class="subline">The Ontario Students Against Austerity</p>
+    <div class="hero-layout">
+      <div class="hero-intro">
+        
+       <div class="ascii-game" id="ascii-game" aria-label="Interactive title">
+       <h1 class="mobile-title">
+          Ontario Students<br />
+          Against Austerity
+       </h1>
+
+       <pre class="ascii-title" aria-label="Ontario Students Against Austerity">
+           .d88888b.  888b    888 88888888888     d8888 8888888b.  8888888 .d88888b.       .d8888b. 88888888888 888     888 8888888b.  8888888888 888b    888 88888888888 .d8888b.               
+          d<span class="ascii-flicker flicker-a flicker-node">88P</span>" "Y88b 8888b   888     <span class="ascii-flicker flicker-b flicker-node">888</span>        d88888 888   Y88b   888  d88P" "Y88b     d88P  Y88b    888     888     888 888  "Y88b 888        8888b   888     888    d88P  Y88b              
+          888     888 88888b  888     888       d88P888 888    888   888  888     888     Y88b.         888     888     888 888    888 888        88888b  888     888    Y88b.                   
+          888     888 888Y88b 888     888      d88P 888 888   d88P   <span class="ascii-flicker flicker-c flicker-node">888</span>  888     888      "Y888b.      <span class="ascii-flicker flicker-d flicker-node">888</span>     888     888 888    888 8888888    888Y88b 888     888     "Y888b.                
+          888     888 888 Y88b888     888     d88P  888 8888888P"    888  888     888         "Y88b.    888     888     888 888    888 888        <span class="ascii-flicker flicker-e flicker-node">888</span> Y88b888     888        "Y88b.              
+          888     888 888  Y88888     888    d88P   888 888 T88b     888  888     888           "888    888     888     888 888    888 888        888  Y88888     888          "888              
+          Y88b. .d88P 888   Y8888     888   d8888888888 888  T88b    888  Y88b. .d88P     Y88b  d88P    888     Y88b. .d88P 888  .d88P 888        888   Y8888     888    Y88b  d88P              
+           "Y88888P"  888    Y888     888  d88P     888 888   T88b 8888888 "Y88888P"       "Y8888P"     888      "Y88888P"  8888888P"  8888888888 888    Y888     888     "Y8888P"               
+                                                                                                                                                                                       
+                                                                                                                                                                                       
+                                                                                                                                                                                       
+       d8888  .d8888b.         d8888 8888888 888b    888  .d8888b. 88888888888            d8888 888     888  .d8888b. 88888888888 8888888888 8888888b.  8888888 88888888888 Y88b   d88P
+      d<span class="ascii-flicker flicker-i flicker-node">888</span>88 d88P  Y88b       d88888   888   8888b   888 d88P  Y88b    888               d88888 888     888 d88P  Y88b    888     888        888   Y88b   888       888      Y88b d88P 
+     d88P888 888    888      <span class="ascii-flicker flicker-j flicker-node">d88</span>P888   888   88888b  888 Y88b.         888              d88P888 888     888 Y88b.         888     888        888    888   888       888       Y88o88P  
+    d88P 888 888            d88P 888   888   <span class="ascii-flicker flicker-k flicker-node">888</span>Y88b 888  "Y888b.      <span class="ascii-flicker flicker-n flicker-node">888</span>             d88P 888 888     888  "Y888b.      888     8888888    888   d88P   888       888        Y888P   
+   d88P  888 888  88888    d88P  888   888   888 Y88b888     "Y88b.    888            d88P  888 888     888     "Y88b.    888     888        8888888P"    888       888         888    
+  d88P   888 888    888   d88P   888   888   888  Y88888       "888    888           d88P   888 <span class="ascii-flicker flicker-m flicker-node">888</span>     888       "888    888     888        888 T88b     888       888         888    
+ d8888888888 Y88b  d88P  d8888888888   888   888   Y8888 Y88b  d88P    888          d8888888888 Y88b. .d88P Y88b  d88P    888     888        888  T88b    888       888         888    
+d88P     888  "Y8888P88 d88P     888 8888888 888    Y888  "Y8888P"     888         d88P     888  "Y88888P"   "Y8888P"     888     8888888888 888   T88b 8888888     888         888    
+</pre>
+</div>
+
       </div>
 
-      <div class="countdown" aria-label="Countdown timer">
-        <div class="countdown-card">
-          <span class="countdown-number" id="days">00</span>
-          <span class="countdown-label">Days</span>
+      <div class="strike-countdown">
+
+        <div class="countdown" aria-label="Countdown to the student strike">
+          <div class="countdown-card">
+            <span class="countdown-number" id="days">00</span>
+            <span class="countdown-label">Days</span>
+          </div>
+
+          <div class="countdown-card">
+            <span class="countdown-number" id="hours">00</span>
+            <span class="countdown-label">Hours</span>
+          </div>
+
+          <div class="countdown-card">
+            <span class="countdown-number" id="minutes">00</span>
+            <span class="countdown-label">Minutes</span>
+          </div>
+
+          <div class="countdown-card">
+            <span class="countdown-number" id="seconds">00</span>
+            <span class="countdown-label">Seconds</span>
+          </div>
         </div>
-        <div class="countdown-card">
-          <span class="countdown-number" id="hours">00</span>
-          <span class="countdown-label">Hours</span>
-        </div>
-        <div class="countdown-card">
-          <span class="countdown-number" id="minutes">00</span>
-          <span class="countdown-label">Minutes</span>
-        </div>
-        <div class="countdown-card">
-          <span class="countdown-number" id="seconds">00</span>
-          <span class="countdown-label">Seconds</span>
-        </div>
+        <p class="countdown-heading">until the student strike.</p>
       </div>
 
-      <a class="button" href={url("/petition/")} style="margin-top: 20px;">
-  Sign the petition
-</a>
+      <div class="petition-row">
+        <a class="button" href={url("/petition/")}>
+          Sign the petition
+        </a>
 
-<section class="signature-panel" aria-label="Petition signatures">
-  <div class="signature-value-row">
-    <strong
-      ><span id="signature-count" class="is-loading" aria-live="polite"
-        >—</span
-      ></strong
-    >
-    <span class="signature-unit">students have signed.</span>
-  </div>
-</section>
+        <p class="signature-panel" aria-label="Petition signatures">
+          <span class="status-dot" aria-hidden="true"></span>
+          <strong
+            id="signature-count"
+            class="is-loading"
+            aria-live="polite"
+          >—</strong>
+          <span class="signature-unit">students have signed</span>
+        </p>
+      </div>
 
+      <div style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <a class="text-link" href={url("/volunteer/")}>
+          Volunteer with us <span aria-hidden="true">-&gt;</span>
+        </a>
+
+        <div class="contact-reveal">
+          <span class="contact-trigger">Contact <span aria-hidden="true">-&gt;</span></span>
+          <SocialLinks />
+        </div>
+      </div>
     </div>
   </section>
+  </div>
+
+  <button
+  class="trillium-control"
+  type="button"
+  aria-expanded="false"
+  aria-label="Show coalition: tenants, students, labour"
+>
+  <span class="trillium-tooltip" aria-hidden="true">
+    Tenants, students, workers
+  </span>
+
+  <img
+    src={trilliumImage.src}
+    alt=""
+    class="trillium-mark"
+  />
+</button>
 </Layout>
 
 <script is:inline define:vars={{ targetDateTime, appsScriptUrl }}>
@@ -160,11 +227,190 @@ const appsScriptUrl =
     } catch (error) {
       console.error(error);
       signatureCountElement.classList.remove("is-loading");
-      signatureCountElement.textContent = "0";
+      signatureCountElement.textContent = "11"; // last updated value; use as fallback
     }
   }
 
   updateCountdown();
   setInterval(updateCountdown, 1000);
   loadSignatureCount();
+
+  const flickerNodes = [...document.querySelectorAll(".flicker-node")];
+  const asciiGame = document.getElementById("ascii-game");
+
+  const notes = [261.63, 329.63, 392.0, 523.25, 392.0, 329.63];
+  const jingle = [
+    { note: "E4", beats: 0.5 }, { note: "A4", beats: 0.5 }, { note: "B4", beats: 0.5 }, { note: "C5", beats: 0.5 }, { note: "A4", beats: 1.5 },
+    { note: "E4", beats: 0.5 }, { note: "A4", beats: 0.5 }, { note: "B4", beats: 0.5 }, { note: "C5", beats: 0.5 }, { note: "A4", beats: 1.5 },
+    { note: "E4", beats: 0.5 }, { note: "A4", beats: 0.5 }, { note: "B4", beats: 0.5 }, { note: "C5", beats: 0.5 }, { note: "B4", beats: 0.5 }, { note: "A4", beats: 0.5 }, { note: "C5", beats: 0.5 }, { note: "B4", beats: 0.5 }, { note: "A4", beats: 1 }, { note: "E5", beats: 1 },
+  ];
+  const jingleLength = jingle.length;
+
+
+  let activeIndex = 0;
+  let completedSteps = 0;
+  let audioContext = null;
+  let soundArmed = false;
+  let isCompleting = false;
+
+  const NOTE = {
+    C4: 261.63,
+    "C#4": 277.18,
+    D4: 293.66,
+    "D#4": 311.13,
+    E4: 329.63,
+    F4: 349.23,
+    "F#4": 369.99,
+    G4: 392.0,
+    "G#4": 415.3,
+    A4: 440.0,
+    "A#4": 466.16,
+    B4: 493.88,
+    C5: 523.25,
+    D5: 587.33,
+    E5: 659.25,
+    F5: 698.46,
+    G5: 783.99,
+  };
+
+
+  function playTone(frequency, delay = 0, duration = 0.18) {
+    if (!audioContext || audioContext.state !== "running") {
+      console.log("Sound blocked. Context state:", audioContext?.state);
+      return;
+    }
+
+    const startTime = audioContext.currentTime + delay;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(frequency, startTime);
+
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.45, startTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration + 0.04);
+  }
+
+  function activateNode(index) {
+    flickerNodes.forEach((node, nodeIndex) => {
+      node.classList.toggle("is-active", nodeIndex === index);
+    });
+
+    activeIndex = index;
+  }
+
+  function finishFlickerGame() {
+    isCompleting = true;
+
+    flickerNodes.forEach((node) => {
+      node.classList.remove("is-active");
+    });
+
+    asciiGame?.classList.add("signal-complete");
+
+    const bpm = 110;
+    const secondsPerBeat = 60 / bpm;
+    let delay = 0;
+    jingle.forEach(({ note, beats }) => {
+      const duration = beats * secondsPerBeat * 0.9;
+
+      playTone(NOTE[note], delay, duration);
+
+      delay += beats * secondsPerBeat;
+    });
+
+    window.setTimeout(() => {
+      completedSteps = 0;
+      isCompleting = false;
+      asciiGame?.classList.remove("signal-complete");
+      activateNode(0);
+    }, 7000);
+  }
+
+  async function armSound() {
+  if (!audioContext) {
+    audioContext = new AudioContext();
+  }
+
+  if (audioContext.state !== "running") {
+    await audioContext.resume();
+  }
+
+  return audioContext.state === "running";
+}
+
+  function collectActiveNode(index) {
+    if (isCompleting || index !== activeIndex) return;
+
+    const currentNote = jingle[completedSteps % jingleLength].note;
+    playTone(NOTE[currentNote], 0, 0.22);
+
+    completedSteps += 1;
+
+    if (completedSteps >= flickerNodes.length) {
+      finishFlickerGame();
+      return;
+    }
+
+    activateNode((activeIndex + 1) % flickerNodes.length);
+  }
+
+  flickerNodes.forEach((node, index) => {
+    node.addEventListener("pointerdown", async (event) => {
+      if (index !== activeIndex || isCompleting) return;
+
+      event.preventDefault();
+
+      const ready = await armSound();
+
+      if (!ready) {
+        console.warn("Audio is still unavailable:", audioContext?.state);
+        return;
+      }
+
+      soundArmed = true;
+      collectActiveNode(index);
+    });
+
+    node.addEventListener("pointerenter", (event) => {
+      if (event.pointerType !== "mouse") return;
+      if (!soundArmed || audioContext?.state !== "running") return;
+
+      collectActiveNode(index);
+    });
+  });
+
+  activateNode(0);
+
+  // sound test
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "s") return;
+
+    if (!audioContext) {
+      audioContext = new AudioContext();
+    }
+
+    audioContext.resume().then(() => {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+
+      oscillator.type = "square";
+      oscillator.frequency.value = 440;
+
+      gain.gain.value = 0.35;
+
+      oscillator.connect(gain);
+      gain.connect(audioContext.destination);
+
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + 1);
+    });
+  });
 </script>

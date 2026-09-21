@@ -1,0 +1,246 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "../layouts/Layout.astro";
+
+const articles = (await getCollection("articles", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+// timeZone UTC is load-bearing: a bare "2026-07-29" in frontmatter parses as
+// UTC midnight, which formats as the 28th in any timezone west of Greenwich.
+const dateFormat = new Intl.DateTimeFormat("en-CA", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "UTC",
+});
+---
+
+<Layout
+  title="Articles | ONSAA"
+  description="Articles and writing from ONSAA."
+  current="/articles/"
+  contentMax="1040px"
+>
+  <section class="page-shell">
+    <div class="inner-shell">
+      <section class="page-header">
+        <h1>Articles</h1>
+      </section>
+
+      <p class="checkbox-label articles-submission-note">
+        Want to contribute an article, analysis, or opinion piece?
+        Email your pitch or draft to <a href="mailto:on.students.against.austerity@gmail.com">
+          on.students.against.austerity@gmail.com
+        </a>.
+      </p>
+
+      <section class="article-list">
+        {
+          articles.map((article) => (
+            <article class="article-card">
+              <p class="article-type">
+                {article.data.type} — {dateFormat.format(article.data.date)}
+              </p>
+
+              <h2>
+                <a
+                  class="article-title-link"
+                  href={`/articles/${article.id}/`}
+                >
+                  {article.data.title}
+                </a>
+              </h2>
+
+              <p>{article.data.summary}</p>
+
+              <a
+                class="read-more"
+                href={`/articles/${article.id}/`}
+              >
+                Read article
+              </a>
+
+              {article.data.link && (
+                <a class="external-link" href={article.data.link}>
+                  Original source
+                </a>
+              )}
+            </article>
+          ))
+        }
+        {
+          articles.length === 0 && (
+            <article class="article-card">
+              <p>No articles yet. Check back soon.</p>
+            </article>
+          )
+        }
+      </section>
+    </div>
+  </section>
+</Layout>
+
+<style is:global>
+  .page-header {
+    padding: 12px 0 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+  }
+
+  .page-header h1 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(2.4rem, 7vw, 5.5rem);
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -0.065em;
+    text-transform: uppercase;
+  }
+
+  .articles-submission-note {
+    max-width: 950px;
+    margin: 24px 0 6px;
+    cursor: default;
+  }
+
+  .articles-submission-note a {
+    color: #fff;
+    font-weight: 700;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+
+  .articles-submission-note a:hover {
+    color: var(--accent);
+  }
+
+  .checkbox-label {
+    gap: 10px;
+
+    padding: 10px 12px;
+    margin-bottom: 20px;
+    margin-top: 14px;
+
+    border-left: 3px solid rgb(215, 9, 9);
+    background: rgba(255, 255, 255, 0.06);
+
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.95rem;
+
+    cursor: pointer;
+  }
+
+  .article-list {
+    margin: 0;
+  }
+
+  .article-card {
+    padding: 30px 0 32px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  }
+
+  .article-type {
+    margin: 0 0 9px;
+    color: var(--accent);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .article-card h2 {
+    max-width: 900px;
+    margin: 0;
+    color: #fff;
+    font-size: clamp(1.55rem, 3.5vw, 2.65rem);
+    font-weight: 750;
+    line-height: 1.04;
+    letter-spacing: -0.04em;
+  }
+
+  .article-title-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .article-title-link:hover {
+    color: var(--accent);
+  }
+
+  .page-header a {
+    color: #fff;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  } 
+
+  .page-header a:hover {
+    color: var(--accent);
+  }
+
+  .article-card > p:not(.article-type) {
+    max-width: 680px;
+    margin: 13px 0 0;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
+  .read-more,
+  .external-link {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 18px;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .read-more {
+    color: #fff;
+  }
+
+  .read-more::after {
+    margin-left: 8px;
+    color: var(--accent);
+    font-size: 1rem;
+    line-height: 0;
+    transition: transform 150ms ease;
+  }
+
+  .read-more:hover::after {
+    transform: translateX(4px);
+  }
+
+  .external-link {
+    margin-left: 18px;
+    color: rgba(255, 255, 255, 0.58);
+  }
+
+  .read-more:hover,
+  .external-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  @media (max-width: 600px) {
+    .page-header {
+      padding-bottom: 22px;
+    }
+
+    .article-card {
+      padding: 23px 0 25px;
+    }
+
+    .article-card h2 {
+      font-size: 1.5rem;
+    }
+
+    .external-link {
+      margin-left: 14px;
+    }
+  }
+</style>
