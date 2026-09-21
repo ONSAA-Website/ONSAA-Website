@@ -80,7 +80,6 @@ export const ALLOWED_INSTITUTIONS = [
   "University of Regina",
   "University of Saskatchewan",
   "Yukon University",
-
   "ABM College of Health and Technology",
   "Bay River College",
   "Bow Valley College",
@@ -249,11 +248,9 @@ export const ALLOWED_INSTITUTIONS = [
   "Southeast College, Weyburn",
   "Western Academy Broadcasting College, Saskatoon",
   "Yukon School of Visual Arts",
-
-
 ];
 
-export const INSTITUTIONAL_EMAIL_DOMAINS = [
+export const ALLOWED_DOMAINS = [
   	
 	"acadiau.ca",
 		

@@ -1,4 +1,3 @@
-```astro
 ---
 import Layout from "../../layouts/Layout.astro";
 import trilliumImage from "../../assets/trillium.png";
@@ -98,36 +97,6 @@ import {
         </div>
 
         <div id="submit-form-view">
-        <div
-          id="submit-subtabs"
-          class="submit-subtabs"
-          style="
-            display: flex;
-            gap: 14px;
-            margin: 0 0 18px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-          "
-        >
-          <button
-            id="submit-subtab-btn"
-            type="button"
-            class="submit-subtab active"
-            data-submit-view="form"
-          >
-            Form
-          </button>
-
-          <button
-            id="template-subtab-btn"
-            type="button"
-            class="submit-subtab"
-            data-submit-view="template"
-          >
-            Announcement Template
-          </button>
-        </div>
-
-        <div id="submit-form-view">
         <div id="verify-step">
           <h2>Submit exemptions for your classes</h2>
           <p class="intro">
@@ -175,7 +144,7 @@ import {
               aria-live="polite"
             ></p>
 
-            <input type="hidden" id="institution-id" name="institution_id" required>
+            <input type="hidden" id="institution-id" name="institution_id" required />
 
             <div style="margin-top: 4px;">
               <label for="course_code">Course code</label>
@@ -189,8 +158,8 @@ import {
             <select id="exemption_type" name="exemption_type" required>
               <option value="">Select a type</option>
               <option value="Extend a deadline">Extend a deadline</option>
-              <option value="Online Asynchronous">Online synchronous class (ex. Zoom)</option>
-              <option value="Online Synchronous">Online asynchronous class (recording)</option>
+              <option value="Online Asynchronous">Online asynchronous class (ex. Zoom)</option>
+              <option value="Online Synchronous">Online synchronous class (recording)</option>
               <option value="Postpone an assessment">Postpone an assessment</option>
               <option value="Other">Other</option>
             </select>
@@ -208,14 +177,13 @@ import {
               type="email"
               id="submitter_email"
               name="submitter_email"
-              style="cursor: not allowed; pointer-events: none;"
+              style="cursor: not-allowed; pointer-events: none; display:none;"
               readonly
-              style="display:none;"
             />
             </div>
 
             <label for="vow" class="checkbox-label">
-              <input type="checkbox" id="vow" name="vow" required>
+              <input type="checkbox" id="vow" name="vow" required />
               I agree to commit to this academic exemption and make an announcement to notify my students.
             </label>
 
@@ -372,11 +340,11 @@ import {
             </div>
 
             <div style="display:none;">
-            <label for="submitter_email">Your institutional email</label>
+            <label for="reporter_email">Your institutional email</label>
             <input
               type="email"
-              id="submitter_email"
-              name="submitter_email"
+              id="reporter_email"
+              name="reporter_email"
               style="cursor: not-allowed; pointer-events: none;"
               readonly
             />
@@ -439,8 +407,6 @@ import {
     const submitStatus = document.getElementById("submit-status");
     const verifyButton = document.getElementById("verify-button");
 
-    const instData = sortedInstitutions;
-
     const reportVerifyForm = document.getElementById("report-verify-form");
     const reportVerifyEmailInput = document.getElementById("report-verify-email");
     const reportVerifyStatus = document.getElementById("report-verify-status");
@@ -450,20 +416,17 @@ import {
     const reportVerifyStep = document.getElementById("report-verify-step");
     const reportForm = document.getElementById("report-form");
     const reportStatus = document.getElementById("report-status");
-    const reporterEmailInput = document.getElementById("submitter_email");
+    const reporterEmailInput = document.getElementById("reporter_email");
     const reasonSelect = document.getElementById("reason_select");
 
     const templateTab = document.getElementById("template-subtab-btn");
     const sharingInfo = document.getElementById("announcement-sharing-info");
 
-    const ANNOUNCEMENT_TEMPLATE = `Hi all, 
-
-      As I assume most in this class are aware, the Ford government has introduced cuts to OSAP for domestic students, and has uncapped tuition fees for international students. Students Against Austerity, a grassroots student organization that formed to fight Ford's austerity policies, is encouraging students and workers to participate in a strike action to protest the cuts to education on November 5th, 2026. To show my solidarity with this action and encourage participation, I am granting all students in this section an academic exemption for the strike date:
-
-      Detail: Nov 5 lecture moved to online/recorded; pre-class quiz canceled/extended; midterm test postponed to MM/DD
-
-      I encourage all of you to participate in this strike and look forward to further actions organized by Students Against Austerity.`;
-
+    const ANNOUNCEMENT_TEMPLATE =
+    "Hi all,\n\n" +
+    "As I assume most in this class are aware, the Ford government has introduced cuts to OSAP for domestic students, and has uncapped tuition fees for international students. Students Against Austerity, a grassroots student organization that formed to fight Ford's austerity policies, is encouraging students and workers to participate in a strike action to protest the cuts to education on November 5th, 2026. To show my solidarity with this action and encourage participation, I am granting all students in this section an academic exemption for the strike date:\n\n" +
+    "Detail: Nov 5 lecture moved to online/recorded; pre-class quiz canceled/extended; midterm test postponed to MM/DD\n\n" +
+    "I encourage all of you to participate in this strike and look forward to further actions organized by Students Against Austerity.";
 
     const announcementTemplateBox = document.getElementById("announcement-template");
     const announcementTemplateText = document.getElementById("announcement-template-text");
@@ -1965,4 +1928,3 @@ import {
     }
   </style>
 </Layout>
-```
